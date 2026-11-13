@@ -87,6 +87,16 @@ make demo        # the service and the demo together: http://localhost:5173  (OP
 make             # every other target: test, e2e, check, example, mutation, stop, clean ...
 ```
 
+### Deploy the demo
+
+One container serves the built demo and the library. Merging to `main` builds the image and applies [terraform/](terraform). GitHub Actions authenticates with Workload Identity, so the repository holds no cloud keys. `make tf-plan` shows what that apply would change, using the image that is already deployed.
+
+The deployed demo: [edgekpi-demo-898717877025.us-central1.run.app](https://edgekpi-demo-898717877025.us-central1.run.app).
+
+The service scales to zero and the CPU is throttled when nothing is in flight, so an idle demo stays inside the Cloud Run free tier. The image is about 180 MB in Artifact Registry, inside that product's free storage tier, so keeping the demo up costs nothing while it is idle. After 24 hours of billable time in a UTC calendar month the demo pauses itself and resumes on the 1st. The Cloud Run service runs as its own identity, which can read Cloud Monitoring and nothing else.
+
+SQL and Malloy run in the container, on the example data. The Databricks metric view stays unavailable, the same as a local demo with no warehouse.
+
 ![Tutorial step 8: how a KPI is written and how it becomes SQL, grown one idea at a time](specs/ux-demo/e2e/screenshots/3b-tutorial-8-ladder.png)
 
 ### What you will see
@@ -169,6 +179,8 @@ Swap `GeneratedSql()` for `MetricView()` (Databricks) or `Malloy()` (Malloy runt
 | [examples/walkthrough/](examples/walkthrough) | the same KPI written as a metric view, as Malloy and as generated SQL, and a migration, step by step |
 | [scripts/](scripts) | `record_evidence.py` (retained run record), `mutation_check.py` (do the tests notice broken rules?) |
 | [demo/web/](demo/web) | the React demo (Vite, TypeScript) and its browser tests |
+| [demo/serve.py](demo/serve.py) | serves that demo and the API on one port, which is what Cloud Run runs |
+| [Dockerfile](Dockerfile) | the image: the built demo, the library and the Malloy runtime |
 
 ## Status and limits
 
