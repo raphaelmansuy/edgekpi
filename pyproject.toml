@@ -16,7 +16,7 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 authors = [{ name = "Raphael MANSUY" }]
-dependencies = ["sqlglot==30.25.0", "pyyaml>=6"]
+dependencies = ["sqlglot==30.30.0", "pyyaml>=6"]
 
 [project.optional-dependencies]
 duckdb = ["duckdb==2.0.0"]
