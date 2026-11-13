@@ -1,0 +1,42 @@
+# Engagement KPIs over the registry-style example data (data.sql).
+# One definition. The three backends (generated SQL, Databricks metric view, Malloy) all read this file.
+name: engagement
+version: "1"
+source: message              # one row per message sent
+key: message_id              # the grain; joins must keep exactly one row per key
+
+joins:
+  client:                    # many-to-one: bare names are fact columns, client.<col> are joined columns
+    table: client
+    on: client_id = client.client_id
+
+dimensions:
+  typology: client.typology
+  tier: client.tier
+  market: market
+  send_year: YEAR(send_date)
+
+measures:
+  n_sent: COUNT(*)
+  n_delivered: COUNT(*) FILTER (WHERE is_delivered)
+  n_opened: COUNT(*) FILTER (WHERE is_opened)
+  n_clicked: COUNT(*) FILTER (WHERE is_clicked)
+  n_reached: COUNT(DISTINCT client_id) FILTER (WHERE is_delivered)
+
+kpis:
+  sent:          {formula: n_sent,                         label: Message Sent,  owner: CRM metric owner, status: confirmed}
+  reached:       {formula: n_reached,                      label: Reach,         owner: CRM metric owner, status: unconfirmed}
+  delivery_rate: {formula: "ratio(n_delivered, n_sent)",   label: Delivery Rate, owner: CRM metric owner, status: confirmed, format: percent}
+  open_rate:     {formula: "ratio(n_opened, n_delivered)", label: Open Rate,     owner: CRM metric owner, status: confirmed, format: percent}
+  click_rate:    {formula: "ratio(n_clicked, n_delivered)", label: Click Rate,   owner: CRM metric owner, status: confirmed, format: percent}
+  ctor:          {formula: "ratio(n_clicked, n_opened)",   label: Click-to-Open, owner: CRM metric owner, status: confirmed, format: percent}
+
+filters:                     # applied to every report; optional ones are skipped when the parameter is unset
+  from_date:
+    predicate: CAST(send_date AS DATE) >= :start_date
+    params: {start_date: date}
+    optional: true
+  to_date:                   # half-open: the end date itself is excluded
+    predicate: CAST(send_date AS DATE) < :end_date
+    params: {end_date: date}
+    optional: true

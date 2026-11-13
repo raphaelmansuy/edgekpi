@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edgekpi"
+version = "0.1.0"
+description = "One KPI definition, three backends: Databricks metric views, Malloy and generated SQL."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+keywords = ["kpi", "sql", "metric views", "malloy", "databricks", "duckdb", "semantic layer", "relational algebra"]
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Database",
+]
+requires-python = ">=3.10"
+authors = [{ name = "Raphael MANSUY" }]
+dependencies = ["sqlglot==30.25.0", "pyyaml>=6"]
+
+[project.optional-dependencies]
+duckdb = ["duckdb==2.0.0"]
+databricks = ["databricks-sdk>=0.100"]
+dev = ["pytest==9.2.0", "duckdb==2.0.0", "databricks-sdk>=0.100"]
+
+[project.scripts]
+edgekpi = "edgekpi.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["edgekpi*"]
+
+[tool.setuptools.package-data]
+"edgekpi.backends.malloy_runtime" = ["run.js", "package.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider"
+markers = [
+  "malloy: needs node and the packages of edgekpi/backends/malloy_runtime (npm install)",
+  "databricks: needs EDGEKPI_DBX_WAREHOUSE and DATABRICKS_CONFIG_PROFILE; runs on a real warehouse",
+  "perf: scaling checks with generous bounds",
+]

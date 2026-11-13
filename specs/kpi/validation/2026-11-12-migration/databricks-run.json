@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-12",
+  "warehouse": {
+    "name": "Serverless Starter Warehouse",
+    "size": "2X-Small"
+  },
+  "schema": "workspace.edgekpi_migration",
+  "tables_created_or_replaced": [
+    "client",
+    "message",
+    "message_event"
+  ],
+  "statements_executed": 93,
+  "parameter_bindings": [
+    {
+      "start_date": null,
+      "end_date": null
+    },
+    {
+      "start_date": "2026-01-01",
+      "end_date": null
+    },
+    {
+      "start_date": "2025-06-01",
+      "end_date": "2026-03-01"
+    }
+  ],
+  "parity": {
+    "bindings": 3,
+    "groups": 34,
+    "compared": 200,
+    "nulls": 18,
+    "different": 0
+  },
+  "values_only_after_migration": 4,
+  "same_inference_as_duckdb": true,
+  "databricks_constructs_executed_natively": [
+    "Case",
+    "CountIf",
+    "Distinct",
+    "Filter",
+    "Nullif",
+    "Placeholder",
+    "SafeDivide",
+    "TryCast"
+  ]
+}

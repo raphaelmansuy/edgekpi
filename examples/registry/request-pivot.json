@@ -1,0 +1,8 @@
+{
+  "kpis": ["sent", "reached", "delivery_rate", "open_rate", "ctor"],
+  "rows": ["typology"],
+  "cols": ["market"],
+  "totals": { "rows": true, "cols": true },
+  "params": { "start_date": "2025-06-01", "end_date": "2026-08-01" },
+  "where": [{ "dim": "market", "in": ["HK", "SG"] }]
+}

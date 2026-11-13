@@ -1,0 +1,22 @@
+{
+  "generated_sql": {
+    "statement_id": "<statement-id>",
+    "rows": 56,
+    "integer_atoms": "exact",
+    "ratios_tolerance": "1e-12",
+    "truncated": false
+  },
+  "native_metric_view": {
+    "statement_id": "<statement-id>",
+    "rows": 56,
+    "integer_atoms": "exact",
+    "ratios_tolerance": "1e-12",
+    "truncated": false
+  },
+  "local": {
+    "python": "3.12.14",
+    "duckdb": "2.0.0",
+    "source_grain": "1050 rows, 1050 distinct message ids"
+  },
+  "fixture_sha256": "f66d9a440eb12d6299825a661d7e96ac40590c32a246542eb2aef27f36f58528"
+}

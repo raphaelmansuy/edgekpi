@@ -1,0 +1,6 @@
+{
+  "kpis": ["sent", "delivery_rate", "unique_clients"],
+  "rows": ["typology"],
+  "cols": ["market"],
+  "totals": { "rows": true, "cols": true }
+}

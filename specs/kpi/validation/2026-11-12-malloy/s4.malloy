@@ -1,0 +1,48 @@
+// Scenario 4 expressed in Malloy: measures are defined once and reused at every nesting level.
+// `message` is the synthetic fixture table built by malloy_s4_probe.js from ../../fixtures/s4_messages.sql.
+// The zero-denominator guard is explicit: Malloy does not add one (see README).
+
+source: message is duckdb.table('message') extend {
+  measure:
+    sent is count()
+    delivered is count() { where: is_delivered }
+    opened is count() { where: is_opened }
+    clicked is count() { where: is_clicked }
+    clients is count(client_id)
+    delivery_rate is delivered / nullif(sent, 0)
+    open_rate is opened / nullif(delivered, 0)
+    click_rate is clicked / nullif(delivered, 0)
+    ctor is clicked / nullif(opened, 0)
+
+  // Column axis Year -> Market, with the Year subtotal as the outer level.
+  view: by_year is {
+    group_by: yr
+    aggregate: sent, delivered, opened, clicked, clients, delivery_rate, open_rate, click_rate, ctor
+    nest: by_market is {
+      group_by: market
+      aggregate: sent, delivered, opened, clicked, clients, delivery_rate, open_rate, click_rate, ctor
+    }
+  }
+}
+
+// Row axis Typology -> Tier -> Campaign. Each level carries its own totals and the column axis:
+// 4 row levels x 3 column levels = the 12 grouping shapes of scenario 4.
+query: s4 is message -> {
+  aggregate: sent, delivered, opened, clicked, clients, delivery_rate, open_rate, click_rate, ctor
+  nest: by_year
+  nest: by_typology is {
+    group_by: typology
+    aggregate: sent, delivered, opened, clicked, clients, delivery_rate, open_rate, click_rate, ctor
+    nest: by_year
+    nest: by_tier is {
+      group_by: tier
+      aggregate: sent, delivered, opened, clicked, clients, delivery_rate, open_rate, click_rate, ctor
+      nest: by_year
+      nest: by_campaign is {
+        group_by: campaign
+        aggregate: sent, delivered, opened, clicked, clients, delivery_rate, open_rate, click_rate, ctor
+        nest: by_year
+      }
+    }
+  }
+}

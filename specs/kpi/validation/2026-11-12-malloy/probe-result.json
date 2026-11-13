@@ -1,0 +1,49 @@
+{
+  "fixture": {
+    "rows": 1050,
+    "distinct_message_ids": 1050
+  },
+  "reference_groups": 56,
+  "malloy_groups": 56,
+  "malloy_distinct_keys": 56,
+  "mismatches": 0,
+  "compared": {
+    "integer_atoms": [
+      "sent",
+      "delivered",
+      "opened",
+      "clicked",
+      "clients"
+    ],
+    "exact": true,
+    "ratios": [
+      "delivery_rate",
+      "open_rate",
+      "click_rate",
+      "ctor"
+    ],
+    "ratios_tolerance": "1e-12"
+  },
+  "generated_sql": {
+    "statements": 1,
+    "characters": 47439,
+    "base_table_references": 1,
+    "group_set_series": [
+      "GENERATE_SERIES(0,11,1)"
+    ],
+    "uses_grouping_sets_clause": false,
+    "count_distinct_expressions": 12
+  },
+  "zero_denominator": {
+    "delivered": 0,
+    "unguarded_division_value": "NaN",
+    "guarded_division_value": "null",
+    "malloy_adds_nullif_itself": false
+  },
+  "versions": {
+    "node": "v24.14.1",
+    "malloy": "0.0.437",
+    "db_duckdb": "0.0.437",
+    "duckdb": "v1.5.5"
+  }
+}

@@ -1,0 +1,341 @@
+{
+  "date": "2026-11-12",
+  "versions": {
+    "python": "3.12.7",
+    "edgekpi": "0.1.0",
+    "sqlglot": "30.25.0",
+    "duckdb": "2.0.0",
+    "malloy": "0.0.437"
+  },
+  "model": {
+    "name": "engagement",
+    "fingerprint": "d1480738f4b1"
+  },
+  "requests": [
+    "pivot-with-params-and-where",
+    "grand-total-only",
+    "two-row-levels",
+    "year-function-no-params",
+    "totals-off",
+    "empty-input",
+    "where-eq-off-axis",
+    "end-date-only",
+    "zero-denominator-group"
+  ],
+  "databricks": {
+    "warehouse": {
+      "name": "Serverless Starter Warehouse",
+      "size": "2X-Small"
+    },
+    "schema": "workspace.edgekpi_lib",
+    "tables_created_or_replaced": [
+      "client",
+      "message",
+      "message_event"
+    ],
+    "statements_executed": 31,
+    "malloy_connection": {
+      "package": "@malloydata/db-databricks 0.0.437",
+      "note": "statements run by Malloy through its own connection are not counted in statements_executed"
+    }
+  },
+  "results": {
+    "pivot-with-params-and-where": {
+      "sql on duckdb": {
+        "nodes": 9,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on duckdb": {
+        "nodes": 9,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "sql on databricks": {
+        "nodes": 9,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "metric view on databricks": {
+        "nodes": 9,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on databricks": {
+        "nodes": 9,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      }
+    },
+    "grand-total-only": {
+      "sql on duckdb": {
+        "nodes": 1,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on duckdb": {
+        "nodes": 1,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "sql on databricks": {
+        "nodes": 1,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "metric view on databricks": {
+        "nodes": 1,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on databricks": {
+        "nodes": 1,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      }
+    },
+    "two-row-levels": {
+      "sql on duckdb": {
+        "nodes": 26,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on duckdb": {
+        "nodes": 26,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "sql on databricks": {
+        "nodes": 26,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "metric view on databricks": {
+        "nodes": 26,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on databricks": {
+        "nodes": 26,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      }
+    },
+    "year-function-no-params": {
+      "sql on duckdb": {
+        "nodes": 11,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on duckdb": {
+        "nodes": 11,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "sql on databricks": {
+        "nodes": 11,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "metric view on databricks": {
+        "nodes": 11,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on databricks": {
+        "nodes": 11,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      }
+    },
+    "totals-off": {
+      "sql on duckdb": {
+        "nodes": 6,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on duckdb": {
+        "nodes": 6,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "sql on databricks": {
+        "nodes": 6,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "metric view on databricks": {
+        "nodes": 6,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on databricks": {
+        "nodes": 6,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      }
+    },
+    "empty-input": {
+      "sql on duckdb": {
+        "nodes": 0,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on duckdb": {
+        "nodes": 0,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "sql on databricks": {
+        "nodes": 0,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "metric view on databricks": {
+        "nodes": 0,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on databricks": {
+        "nodes": 0,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      }
+    },
+    "where-eq-off-axis": {
+      "sql on duckdb": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on duckdb": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "sql on databricks": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "metric view on databricks": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on databricks": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      }
+    },
+    "end-date-only": {
+      "sql on duckdb": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on duckdb": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "sql on databricks": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "metric view on databricks": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on databricks": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      }
+    },
+    "zero-denominator-group": {
+      "sql on duckdb": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on duckdb": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "sql on databricks": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "metric view on databricks": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      },
+      "malloy on databricks": {
+        "nodes": 3,
+        "diffs": 0,
+        "violations": 0,
+        "error": null
+      }
+    }
+  },
+  "pairs": [
+    "sql on duckdb",
+    "malloy on duckdb",
+    "sql on databricks",
+    "metric view on databricks",
+    "malloy on databricks"
+  ],
+  "comparisons": 45,
+  "failed": 0
+}

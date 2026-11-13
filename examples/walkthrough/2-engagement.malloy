@@ -1,0 +1,27 @@
+// Option 2: Malloy. Executed on DuckDB by verify_malloy.js against message.sql.
+
+// 1. Define once. Measures and formulas, and no grouping.
+source: message is duckdb.table('message') extend {
+  measure:
+    sent is count()
+    delivered is count() { where: is_delivered }
+    unique_clients is count(client_id)
+    delivery_rate is delivered / nullif(sent, 0)
+}
+
+// 2. Ask for a view. Each nesting level is one level of the report.
+query: pivot is message -> {
+  aggregate: sent, delivery_rate, unique_clients
+  nest: by_market is {
+    group_by: market
+    aggregate: sent, delivery_rate, unique_clients
+  }
+  nest: by_typology is {
+    group_by: typology
+    aggregate: sent, delivery_rate, unique_clients
+    nest: by_market is {
+      group_by: market
+      aggregate: sent, delivery_rate, unique_clients
+    }
+  }
+}

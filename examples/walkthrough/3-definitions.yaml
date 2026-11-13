@@ -1,0 +1,24 @@
+# Option 3: generated SQL. Catalogue entries from which the planner generates 3-generated.sql.
+# Proposed format (../../specs/kpi/06-semantic-model-and-dsl.md). The prototype reads the same content as Python
+# objects in verify_generated.py; no product catalogue exists yet.
+fact: message
+source: crm.silver.message            # example name
+grain: one row per message sent
+
+measures:
+  sent:
+    expression: COUNT(*)
+    kind: count
+  delivered:
+    expression: COUNT(*) FILTER (WHERE is_delivered)
+    kind: count
+  unique_clients:
+    expression: COUNT(DISTINCT client_id)
+    kind: unique
+
+kpis:
+  delivery_rate:
+    label: Delivery Rate
+    formula: ratio(delivered, sent)   # the planner writes the zero-denominator guard
+    owner: CRM metric owner           # proposed role
+    status: unconfirmed               # published reports accept confirmed KPIs only

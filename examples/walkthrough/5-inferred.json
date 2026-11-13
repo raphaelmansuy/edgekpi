@@ -1,0 +1,116 @@
+{
+  "source": {
+    "fact": "message AS C",
+    "key": "C.message_id",
+    "joins": [
+      {
+        "join": "LEFT JOIN client AS D ON D.client_id = C.client_id",
+        "grain": "one row per message kept",
+        "fact_rows": 13,
+        "joined_rows": 13,
+        "distinct_keys": 13
+      }
+    ]
+  },
+  "parameters": [
+    "end_date",
+    "start_date"
+  ],
+  "shared_row_filters": [
+    {
+      "kind": "optional",
+      "parameter": "start_date",
+      "applies": "CAST(C.send_date AS DATE) >= TRY_CAST(:start_date AS DATE)"
+    },
+    {
+      "kind": "optional",
+      "parameter": "end_date",
+      "applies": "CAST(C.send_date AS DATE) < TRY_CAST(:end_date AS DATE)"
+    }
+  ],
+  "measures": {
+    "m1": {
+      "expression": "COUNT(*)",
+      "used_by": [
+        "message-sent",
+        "delivery-rate"
+      ]
+    },
+    "m2": {
+      "expression": "COUNT(DISTINCT C.client_id) FILTER(WHERE C.is_delivered)",
+      "used_by": [
+        "message-reached"
+      ]
+    },
+    "m3": {
+      "expression": "COUNT(*) FILTER(WHERE C.is_delivered)",
+      "used_by": [
+        "delivery-rate",
+        "open-rate",
+        "click-rate"
+      ]
+    },
+    "m4": {
+      "expression": "COUNT(*) FILTER(WHERE C.is_opened)",
+      "used_by": [
+        "open-rate",
+        "click-to-open-rate"
+      ]
+    },
+    "m5": {
+      "expression": "COUNT(*) FILTER(WHERE C.is_clicked)",
+      "used_by": [
+        "click-rate",
+        "click-to-open-rate"
+      ]
+    }
+  },
+  "kpis": {
+    "message-sent": {
+      "alias": "sent",
+      "expression": "m1",
+      "own_row_filters": []
+    },
+    "message-reached": {
+      "alias": "reached",
+      "expression": "m2",
+      "own_row_filters": [
+        "C.is_delivered"
+      ]
+    },
+    "delivery-rate": {
+      "alias": "delivery_rate",
+      "expression": "TRY_DIVIDE(m3, m1)",
+      "own_row_filters": []
+    },
+    "open-rate": {
+      "alias": "open_rate",
+      "expression": "TRY_DIVIDE(m4, m3)",
+      "own_row_filters": []
+    },
+    "click-rate": {
+      "alias": "click_rate",
+      "expression": "m5 * 1.0 / NULLIF(m3, 0)",
+      "own_row_filters": []
+    },
+    "click-to-open-rate": {
+      "alias": "ctor",
+      "expression": "TRY_DIVIDE(m5, m4)",
+      "own_row_filters": []
+    }
+  },
+  "refused": {
+    "open-events": "a join changes the grain: 13 messages become 14 rows covering 7 messages",
+    "messages-per-client": "more than one aggregation"
+  },
+  "databricks_constructs_read": [
+    "Case",
+    "CountIf",
+    "Distinct",
+    "Filter",
+    "Nullif",
+    "Placeholder",
+    "SafeDivide",
+    "TryCast"
+  ]
+}

@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A SQL query is not a KPI — briefing note</title>
+<meta name="author" content="Raphael MANSUY">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,500;1,400;1,500&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Skin sampled from gabrielgreenfield.com: navy, slate, green; Work Sans + Playfair Display. */
+  :root {
+    --paper: #ffffff;
+    --paper-2: #f3f6f7;
+    --ink: #0b2e45;
+    --body: #33505f;
+    --muted: #486274;
+    --soft: #8597a2;
+    --rule: rgba(11, 46, 69, 0.14);
+    --rule-solid: #c2cbd1;
+    --accent: #377c49;
+    --accent-tint: rgba(55, 124, 73, 0.09);
+    --accent-pale: #cde9d5;
+    --sans: 'Work Sans', 'Helvetica Neue', Arial, sans-serif;
+    --serif: 'Playfair Display', Georgia, serif;
+    --mono: 'Geist Mono', ui-monospace, Menlo, monospace;
+  }
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #dfe5e8; }
+  body { counter-reset: pg; }
+  .page { counter-increment: pg; }
+  .pn::after { content: counter(pg) " / 13"; }
+  .foot span:first-child::after { content: " · Raphael MANSUY"; }
+  body { font-family: var(--sans); color: var(--body); font-size: 9.4pt; line-height: 1.5;
+         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 210mm; height: 297mm; margin: 6mm auto; padding: 15mm 15mm 16mm; background: var(--paper);
+          position: relative; overflow: hidden; page-break-after: always; break-after: page; }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  @media print { html, body { background: var(--paper); } .page { margin: 0; } }
+
+  h1, h2, h3, p { margin: 0; }
+  .eyebrow { font-family: var(--mono); font-size: 6.8pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--soft); }
+  h2 { font-weight: 600; font-size: 20pt; line-height: 1.15; color: var(--ink); letter-spacing: -0.01em; margin-top: 2.5mm; }
+  h3 { font-weight: 600; font-size: 10.4pt; color: var(--ink); line-height: 1.3; }
+  .lede { font-size: 10.6pt; line-height: 1.55; color: var(--body); margin-top: 3.5mm; max-width: 172mm; }
+  strong { color: var(--ink); font-weight: 600; }
+  .good { color: var(--accent); font-weight: 600; }
+  .running { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 2.5mm;
+             border-bottom: 0.3mm solid var(--ink); }
+  .running .brand { font-weight: 600; color: var(--ink); font-size: 8.4pt; }
+  .foot { position: absolute; left: 15mm; right: 15mm; bottom: 8mm; display: flex; justify-content: space-between;
+          font-family: var(--mono); font-size: 6.4pt; letter-spacing: 0.08em; color: var(--soft);
+          border-top: 0.2mm solid var(--rule-solid); padding-top: 2mm; }
+  .bar { height: 1.6mm; background: linear-gradient(90deg, var(--muted) 0%, var(--soft) 35%, var(--accent-pale) 100%); }
+
+  /* Page 1 */
+  .cover { padding: 0; }
+  .hero { background: var(--ink); color: #fff; padding: 14mm 15mm 10mm; }
+  .hero .eyebrow { color: var(--accent-pale); }
+  .hero h1 { font-weight: 600; font-size: 33pt; line-height: 1.08; letter-spacing: -0.015em; margin-top: 5mm; }
+  .hero .sub { font-weight: 300; font-size: 13pt; line-height: 1.4; color: #d5dee3; margin-top: 4mm; max-width: 150mm; }
+  .hero .byline { margin-top: 5mm; font-size: 9.6pt; color: #d5dee3; }
+  .hero .byline strong { color: #fff; font-weight: 600; }
+  .cover .inner { padding: 6mm 15mm 0; }
+  .cover .lede { font-size: 10.2pt; max-width: none; margin-top: 0; }
+  .trio { display: grid; grid-template-columns: 1.05fr 1fr 1.1fr; gap: 4mm; margin-top: 5mm; }
+  .card { border: 0.25mm solid var(--rule-solid); border-radius: 1.4mm; padding: 4mm 4.2mm 4.4mm; background: #fff; }
+  .card .eyebrow { display: flex; align-items: center; gap: 1.6mm; }
+  .dot { width: 1.9mm; height: 1.9mm; border-radius: 50%; background: var(--soft); display: inline-block; }
+  .dot.ink { background: var(--ink); } .dot.accent { background: var(--accent); }
+  .card h3 { margin-top: 2mm; }
+  .card p { margin-top: 1.6mm; font-size: 8.9pt; line-height: 1.48; }
+  .card.solution { border-color: var(--accent); background: var(--accent-tint); }
+  .section-title { display: flex; align-items: baseline; gap: 3mm; margin-top: 6.5mm; padding-bottom: 1.8mm; border-bottom: 0.2mm solid var(--rule-solid); }
+  .section-title h3, .section-title .eyebrow { white-space: nowrap; }
+  .section-title h3 { font-size: 11.4pt; }
+  .evidence { display: grid; grid-template-columns: 1.12fr 1fr; gap: 8mm; margin-top: 4mm; align-items: start; }
+  table { border-collapse: collapse; width: 100%; font-size: 8.8pt; }
+  th { font-family: var(--mono); font-weight: 500; font-size: 6.4pt; letter-spacing: 0.12em; text-transform: uppercase;
+       color: var(--soft); text-align: left; padding: 0 2mm 1.6mm 0; border-bottom: 0.25mm solid var(--ink); vertical-align: bottom; }
+  td { padding: 1.7mm 2mm 1.7mm 0; border-bottom: 0.2mm solid var(--rule); vertical-align: top; color: var(--body); }
+  td.num, th.num { text-align: right; padding-right: 0; padding-left: 3mm; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.avg td { color: var(--soft); }
+  tr.avg td.num span { text-decoration: line-through; text-decoration-thickness: 0.25mm; }
+  tr.total td { border-bottom: 0.3mm solid var(--ink); border-top: 0.3mm solid var(--ink); color: var(--ink); font-weight: 600; background: var(--accent-tint); }
+  tr.total td.num { color: var(--accent); }
+  tr.total td:first-child, tr.avg td:first-child { padding-left: 1.6mm; }
+  .figure-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .stat { border-left: 0.7mm solid var(--accent); padding: 0.4mm 0 0.6mm 3.2mm; }
+  .stat .big { font-weight: 600; font-size: 22pt; line-height: 1; color: var(--ink); letter-spacing: -0.02em; }
+  .stat .big small { font-size: 10pt; font-weight: 500; letter-spacing: 0; }
+  .stat p { font-size: 8.2pt; line-height: 1.4; margin-top: 1.6mm; }
+  .why { margin-top: 4mm; font-size: 8.9pt; }
+  .note { font-size: 7.3pt; line-height: 1.45; color: var(--soft); margin-top: 3mm; }
+  .quote { font-family: var(--serif); font-style: italic; font-size: 14pt; line-height: 1.35; color: var(--ink);
+           margin: 5mm 6mm 0 0; padding-left: 5mm; border-left: 0.7mm solid var(--accent); }
+
+  /* Diagrams */
+  figure { margin: 4mm 0 0; }
+  figure svg { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 7.6pt; color: var(--soft); margin-top: 1.5mm; }
+  figcaption b { color: var(--muted); font-weight: 600; }
+
+  /* Page 2 */
+  .reasons { margin-top: 3.5mm; border-top: 0.3mm solid var(--ink); }
+  .reason { display: grid; grid-template-columns: 9mm 1fr 62mm; gap: 0 4mm; padding: 1.8mm 0 1.9mm; border-bottom: 0.2mm solid var(--rule); }
+  .reason .n { font-weight: 300; font-size: 19pt; line-height: 1; color: var(--soft); }
+  .reason p { font-size: 8.8pt; line-height: 1.46; margin-top: 0.9mm; }
+  .impact { background: var(--paper-2); border-radius: 1.2mm; padding: 2.2mm 3mm 2.4mm; align-self: start; }
+  .impact .eyebrow { font-size: 6pt; }
+  .impact p { margin-top: 0.8mm; font-size: 8.3pt; line-height: 1.42; color: var(--ink); }
+  .fair { margin-top: 3mm; border: 0.25mm dashed var(--rule-solid); border-radius: 1.4mm; padding: 2.6mm 4mm 2.8mm; display: grid; grid-template-columns: 40mm 1fr; gap: 5mm; align-items: start; }
+
+  /* Page 3 scopes strip */
+  .scopes { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 4mm; margin-top: 3.5mm; }
+  .scope { border: 0.25mm solid var(--rule-solid); border-radius: 1.4mm; padding: 2.6mm 3.6mm 2.8mm; }
+  .scope.total { border-color: var(--accent); background: var(--accent-tint); }
+  .scope .calc { font-weight: 600; font-size: 13pt; color: var(--ink); line-height: 1.2; margin-top: 1.4mm; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+  .scope .calc b { color: var(--accent); font-weight: 600; }
+  .scope p.what { font-size: 8.2pt; line-height: 1.4; margin-top: 1.2mm; }
+  .fair p { font-size: 8.6pt; line-height: 1.46; }
+
+  /* Page 3 */
+  .compare { margin-top: 4mm; }
+  .compare th:nth-child(1) { width: 37mm; } .compare th:nth-child(2) { width: 66mm; }
+  .compare td:nth-child(1) { color: var(--ink); font-weight: 600; }
+  .compare td:nth-child(3) { color: var(--ink); }
+  .compare th:nth-child(3) { color: var(--accent); }
+  .compare td { font-size: 8.6pt; line-height: 1.42; padding-top: 1.55mm; padding-bottom: 1.55mm; }
+
+  /* Implementation pages */
+  .opt-head { display: flex; align-items: baseline; gap: 3mm; margin-top: 2.5mm; }
+  .opt-head h2 { margin-top: 0; }
+  .badge { font-family: var(--mono); font-size: 6.4pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--soft);
+           border: 0.2mm solid var(--rule-solid); border-radius: 0.8mm; padding: 0.5mm 1.8mm; white-space: nowrap; position: relative; top: -1mm; }
+  .badge.pref { color: var(--accent); border-color: var(--accent); background: var(--accent-tint); }
+  .codes { display: grid; gap: 5mm; margin-top: 4.5mm; align-items: start; }
+  .codes.wide-left { grid-template-columns: minmax(0, 1.14fr) minmax(0, 0.86fr); }
+  .codes.even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .codehead { display: flex; align-items: baseline; gap: 2mm; margin-bottom: 1.4mm; }
+  .codehead .n { font-weight: 600; font-size: 9.4pt; color: var(--accent); }
+  .codehead h3 { font-size: 9.4pt; }
+  .codehead .eyebrow { margin-left: auto; font-size: 6pt; white-space: nowrap; }
+  pre.code { font-family: var(--mono); font-size: 6.5pt; line-height: 1.47; color: var(--ink); background: var(--paper-2);
+             border-left: 0.7mm solid var(--muted); border-radius: 0 1.2mm 1.2mm 0; padding: 2.8mm 3.2mm 3mm; margin: 0;
+             white-space: pre; overflow: hidden; }
+  pre.code b { color: var(--accent); font-weight: 500; }
+  pre.code i { color: var(--soft); font-style: normal; }
+  .block + .block { margin-top: 4mm; }
+  .mini td, .mini th { font-size: 7.8pt; padding-top: 1mm; padding-bottom: 1mm; }
+  .mini th { font-size: 6.2pt; letter-spacing: 0.08em; }
+  .mini td:first-child { white-space: nowrap; }
+  .mini.cols th { text-transform: none; letter-spacing: 0; }
+  .mini.cols td.num, .mini.cols th.num { padding-left: 1.5mm; }
+  .mini td.mono { font-family: var(--mono); font-size: 7pt; color: var(--ink); }
+  .mini tr.tot td { color: var(--ink); font-weight: 600; }
+  .mini td.l1 { padding-left: 4mm; } .mini td.l2 { padding-left: 8mm; }
+  .facts { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 6mm; margin-top: 4.5mm; padding-top: 3.2mm; border-top: 0.3mm solid var(--ink); }
+  .facts h3 { font-size: 9.4pt; margin-bottom: 1.2mm; }
+  .facts ul, .facts ol { margin: 0; padding: 0 0 0 4mm; }
+  .facts li { font-size: 8.3pt; line-height: 1.42; margin-top: 1.1mm; padding-left: 0.5mm; }
+  .facts li::marker { color: var(--soft); font-size: 7.6pt; }
+  .facts code, .compare3 code, .lede code { font-family: var(--mono); font-size: 0.86em; color: var(--ink); background: var(--paper-2); padding: 0 0.8mm; border-radius: 0.6mm; }
+  .tested { margin-top: 4mm; display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .where td { font-size: 8.5pt; padding-top: 1.3mm; padding-bottom: 1.3mm; }
+  .where td:nth-child(1) { color: var(--ink); }
+  .where td:nth-child(2) { font-family: var(--mono); font-size: 7.2pt; color: var(--muted); text-align: right; padding-right: 0; white-space: nowrap; }
+  .tested > div { border-radius: 1.2mm; padding: 2.6mm 3.4mm 2.8mm; background: var(--paper-2); }
+  .tested > div.when { background: var(--accent-tint); border: 0.25mm solid var(--accent); }
+  .tested p { font-size: 8.3pt; line-height: 1.42; margin-top: 0.8mm; color: var(--ink); }
+  .example { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 7mm; margin-top: 3.5mm; align-items: start; }
+  .example p { font-size: 8.8pt; line-height: 1.46; }
+  .example p + p { margin-top: 1.8mm; }
+  .msgs { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-top: 4mm; }
+  .pivot th.num { padding-left: 2mm; }
+  .pivot td { font-variant-numeric: tabular-nums; }
+  .pivot td:first-child { color: var(--ink); font-weight: 600; }
+  .pivot td.t, .pivot tr.t td { color: var(--ink); font-weight: 600; background: var(--accent-tint); }
+  .compare3 td, .compare3 th { font-size: 8.4pt; line-height: 1.4; padding-top: 1.45mm; padding-bottom: 1.45mm; }
+  .compare3 th:nth-child(1) { width: 36mm; }
+  .compare3 td:nth-child(1) { color: var(--ink); font-weight: 600; }
+  .compare3 th:nth-child(2) { color: var(--accent); }
+  .compare3 td:nth-child(2) { color: var(--ink); background: var(--accent-tint); padding-left: 2mm; }
+  .compare3 th:nth-child(2) { padding-left: 2mm; }
+  .compare3 td:nth-child(3), .compare3 th:nth-child(3) { padding-left: 2.5mm; }
+  .roadmap td:nth-child(1) { width: 9mm; font-weight: 600; color: var(--accent); font-size: 10pt; }
+  .roadmap td:nth-child(2) { width: 54mm; color: var(--ink); font-weight: 600; }
+  .roadmap td { font-size: 8.6pt; line-height: 1.42; }
+
+  /* Migration pages */
+  .duo th { width: 50%; }
+  .duo th:nth-child(1) { color: var(--accent); }
+  .duo td { font-size: 8.6pt; line-height: 1.42; padding-top: 1.5mm; padding-bottom: 1.5mm; }
+  .duo td:nth-child(1) { color: var(--ink); background: var(--accent-tint); padding-left: 2.5mm; }
+  .duo th:nth-child(1) { padding-left: 2.5mm; }
+  .duo td:nth-child(2), .duo th:nth-child(2) { padding-left: 4mm; }
+  .outcomes { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 4mm; margin-top: 3.5mm; }
+  .outcomes .card { padding: 3.2mm 4mm 3.4mm; }
+  .outcomes .card p { font-size: 8.4pt; line-height: 1.44; }
+  .outcomes .card .eyebrow { color: var(--soft); }
+  .outcomes .card.solution .eyebrow { color: var(--accent); }
+  .inferred td { font-size: 8.3pt; line-height: 1.4; padding-top: 1.25mm; padding-bottom: 1.25mm; }
+  .inferred .x { font-family: var(--mono); font-size: 6.5pt; color: var(--ink); }
+  .inferred td.k { font-family: var(--mono); font-size: 7pt; color: var(--accent); font-weight: 500; white-space: nowrap; width: 8mm; }
+  .inferred tr.head td { font-family: var(--mono); font-size: 6.2pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--soft); padding-top: 2.6mm; border-bottom: 0.25mm solid var(--ink); font-weight: 400; }
+  .guards { display: grid; grid-template-columns: 1fr 1fr; gap: 0 8mm; margin-top: 1mm; }
+  .guards div { padding: 1.7mm 0 1.9mm; border-bottom: 0.2mm solid var(--rule); font-size: 8.6pt; line-height: 1.43; }
+  .limits { margin-top: 5mm; border: 0.25mm dashed var(--rule-solid); border-radius: 1.4mm; padding: 3mm 4mm 3.2mm; display: grid; grid-template-columns: 40mm 1fr; gap: 5mm; align-items: start; }
+  .limits p { font-size: 8.6pt; line-height: 1.46; }
+  .cases td { font-size: 8.4pt; line-height: 1.4; padding-top: 1.25mm; padding-bottom: 1.25mm; }
+  .cases td:nth-child(1) { color: var(--ink); font-weight: 600; width: 36mm; white-space: nowrap; }
+  .cases th:nth-child(2) { width: 74mm; }
+  .cases td:nth-child(3) { color: var(--ink); padding-left: 3mm; }
+  .cases th:nth-child(3) { color: var(--accent); padding-left: 3mm; }
+
+  /* Page 4 */
+  .kinds td { font-size: 8.6pt; line-height: 1.42; }
+  .kinds td:nth-child(1) { color: var(--ink); font-weight: 600; width: 27mm; }
+  .kinds th:nth-child(2) { width: 39mm; } .kinds th:nth-child(3) { width: 53mm; }
+  .options { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 4mm; margin-top: 3.5mm; }
+  .options .card { padding: 3.4mm 4mm 3.6mm; }
+  .options .card p { font-size: 8.5pt; }
+  .options .card .eyebrow { color: var(--soft); }
+  .options .card.solution .eyebrow { color: var(--accent); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-top: 1mm; }
+  ol.steps, ul.asks { margin: 0; padding: 0; list-style: none; }
+  ol.steps { counter-reset: s; }
+  ol.steps li, ul.asks li { position: relative; padding: 1.4mm 0 1.5mm 7mm; border-bottom: 0.2mm solid var(--rule); font-size: 8.6pt; line-height: 1.42; }
+  ol.steps li::before { counter-increment: s; content: counter(s); position: absolute; left: 0; top: 1.2mm; font-weight: 600; color: var(--accent); font-size: 10pt; }
+  ul.asks li::before { content: ""; position: absolute; left: 1mm; top: 3.3mm; width: 2.6mm; height: 0.3mm; background: var(--ink); }
+  .closing { margin-top: 5mm; padding: 3.6mm 5mm 3.8mm; background: var(--ink); color: #d5dee3; border-radius: 1.4mm; display: grid; grid-template-columns: 1fr 78mm; gap: 7mm; align-items: center; }
+  .closing .q { font-family: var(--serif); font-style: italic; font-size: 12pt; line-height: 1.36; color: #fff; }
+  .closing p { font-size: 7.8pt; line-height: 1.45; }
+</style>
+</head>
+<body>
+
+<!-- ───────────────────────── Page 1 ───────────────────────── -->
+<section class="page cover">
+  <div class="hero">
+    <p class="eyebrow">KPI governance · Briefing note · November 2026</p>
+    <h1>A SQL query is not a KPI</h1>
+    <p class="sub">Why a parameterised query is the wrong place to define a business metric, and what to use instead.</p>
+    <p class="byline">By <strong>Raphael MANSUY</strong></p>
+  </div>
+  <div class="bar"></div>
+
+  <div class="inner">
+    <p class="lede">A common pattern stores each engagement KPI as a SQL query with parameters: a date range, some filters and a slot for the grouping. That is enough for one number in one table. It is not enough when the business asks for the same KPIs by typology, tier and campaign, across years and markets, with subtotals and grand totals. <strong>A query records how to produce an answer. It does not record what the answer means</strong>, so the answer cannot be safely regrouped.</p>
+
+    <div class="trio">
+      <div class="card">
+        <p class="eyebrow"><span class="dot ink"></span>The problem</p>
+        <h3>Totals you cannot trust, layouts you cannot change</h3>
+        <p>Subtotals of rates and of unique audiences come out wrong when they are built from the figures on screen. Every new layout needs new SQL.</p>
+      </div>
+      <div class="card">
+        <p class="eyebrow"><span class="dot"></span>The cause</p>
+        <h3>The query keeps the result and drops the ingredients</h3>
+        <p>It returns finished numbers at one grouping. What is needed to regroup them is gone: the numerator, the denominator, and who was counted.</p>
+      </div>
+      <div class="card solution">
+        <p class="eyebrow"><span class="dot accent"></span>The solution</p>
+        <h3>Define each KPI once, with no grouping inside</h3>
+        <p>Store the ingredients and the formula. Let the reader choose rows, columns and totals. Compute every cell and every total from its own data.</p>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <h3>What it costs, on a small example</h3>
+      <span class="eyebrow">Delivery rate by campaign · Synthetic</span>
+    </div>
+    <div class="evidence">
+      <div>
+        <table>
+          <thead><tr><th>Campaign</th><th class="num">Sent</th><th class="num">Delivered</th><th class="num">Delivery rate</th></tr></thead>
+          <tbody>
+            <tr><td>Campaign A</td><td class="num">90</td><td class="num">81</td><td class="num">90.0%</td></tr>
+            <tr><td>Campaign B</td><td class="num">10</td><td class="num">5</td><td class="num">50.0%</td></tr>
+            <tr class="avg"><td>Total by averaging the two rates</td><td class="num">—</td><td class="num">—</td><td class="num"><span>70.0%</span></td></tr>
+            <tr class="total"><td>Total over all messages</td><td class="num">100</td><td class="num">86</td><td class="num">86.0%</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Synthetic data. The correct total divides all delivered messages (86) by all sent messages (100). The 13-message data set of <code>examples/registry/</code> shows the error in the other direction: a delivery rate of 76.9%, against 81.9% for the average of its three typology cells.</p>
+      </div>
+      <div>
+        <div class="figure-pair">
+          <div class="stat"><p class="big">&minus;16 <small>points</small></p><p>Delivery rate understated when the total averages the two campaigns.</p></div>
+          <div class="stat"><p class="big">9 <small>not 6</small></p><p>Clients reached when two market cells are added, against 6 distinct clients.</p></div>
+        </div>
+        <p class="why"><strong>Why the average misleads.</strong> Campaign A carries 90% of the messages and delivers 90% of them. The average gives campaign B, with ten messages, half of the vote.</p>
+      </div>
+    </div>
+
+    <p class="quote">A query answers one question. A KPI has to answer the same question at every level of the report.</p>
+  </div>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 2 ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 1 · The problem</span></div>
+  <h2>Five reasons a parameterised query falls short</h2>
+  <p class="lede" style="font-size:9.8pt">A parameterised query is SQL text with blanks: values for dates and filters, and a list of columns to group by. Filling the blanks runs the query and returns one finished number per group. The weaknesses below come from that design, not from anyone's SQL.</p>
+
+  <figure>
+    <svg viewBox="0 0 640 176" role="img" aria-labelledby="today-title today-desc" xmlns="http://www.w3.org/2000/svg">
+      <title id="today-title">Today: each KPI is a parameterised SQL query</title>
+      <desc id="today-desc">Parameters fill a SQL text stored per KPI, which returns one finished number per group to the report; the ingredients are discarded, and each new layout requires editing the SQL.</desc>
+      <defs>
+        <marker id="today-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#486274"/></marker>
+      </defs>
+      <rect width="640" height="176" fill="#ffffff"/>
+      <!-- connectors -->
+      <line x1="144" y1="76" x2="180" y2="76" stroke="#486274" stroke-width="1.2" marker-end="url(#today-arrow)"/>
+      <line x1="308" y1="76" x2="344" y2="76" stroke="#486274" stroke-width="1.2" marker-end="url(#today-arrow)"/>
+      <line x1="472" y1="76" x2="508" y2="76" stroke="#486274" stroke-width="1.2" marker-end="url(#today-arrow)"/>
+      <path d="M572,112 V148 Q572,156 564,156 H252 Q244,156 244,148 V112" fill="none" stroke="#486274" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#today-arrow)"/>
+      <rect x="368" y="136" width="80" height="12" rx="2" fill="#ffffff"/>
+      <text x="408" y="145" fill="#486274" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">EDIT PER VIEW</text>
+      <!-- 1 parameters -->
+      <rect x="16" y="40" width="128" height="72" rx="6" fill="#ffffff"/>
+      <rect x="16" y="40" width="128" height="72" rx="6" fill="rgba(72,98,116,0.10)" stroke="#8597a2" stroke-width="1"/>
+      <text x="24" y="54" fill="#8597a2" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">INPUT</text>
+      <text x="80" y="76" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Parameters</text>
+      <text x="80" y="91" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">dates · filters</text>
+      <text x="80" y="103" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">list of grouping columns</text>
+      <!-- 2 sql text -->
+      <rect x="180" y="40" width="128" height="72" rx="6" fill="#ffffff" stroke="#0b2e45" stroke-width="1.2"/>
+      <text x="188" y="54" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">STORED PER KPI</text>
+      <text x="244" y="76" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">SQL text</text>
+      <text x="244" y="91" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">one query per KPI</text>
+      <text x="244" y="103" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">grouping written into it</text>
+      <!-- 3 finished numbers -->
+      <rect x="344" y="40" width="128" height="72" rx="6" fill="#ffffff" stroke="#0b2e45" stroke-width="1"/>
+      <text x="352" y="54" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">RESULT</text>
+      <text x="408" y="76" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Finished numbers</text>
+      <text x="408" y="91" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">one per group</text>
+      <text x="408" y="103" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">ingredients discarded</text>
+      <!-- 4 report -->
+      <rect x="508" y="40" width="128" height="72" rx="6" fill="#ffffff"/>
+      <rect x="508" y="40" width="128" height="72" rx="6" fill="rgba(11,46,69,0.03)" stroke="rgba(11,46,69,0.30)" stroke-width="1"/>
+      <text x="516" y="54" fill="#8597a2" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">REPORT</text>
+      <text x="572" y="76" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Dashboard</text>
+      <text x="572" y="91" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">can display the numbers</text>
+      <text x="572" y="103" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">cannot recombine them</text>
+    </svg>
+    <figcaption><b>Today.</b> The KPI lives in the SQL text. The report receives numbers it can show but cannot total, and a new layout sends someone back to edit the SQL.</figcaption>
+  </figure>
+
+  <div class="reasons">
+    <div class="reason">
+      <span class="n">1</span>
+      <div><h3>It stores an answer, not a meaning</h3>
+        <p>The query returns 90%. The 81 delivered and 90 sent messages behind it are not returned, so it cannot be combined with another figure.</p></div>
+      <div class="impact"><p class="eyebrow">Business impact</p><p>Rates of 90% and 50% on 90 and 10 messages average to 70%; the answer is 86%.</p></div>
+    </div>
+    <div class="reason">
+      <span class="n">2</span>
+      <div><h3>The grouping is written into the text</h3>
+        <p>A query computes at one level of detail. Another level means editing the text or pasting a new column list into it, which is text substitution and not a safe value parameter.</p></div>
+      <div class="impact"><p class="eyebrow">Business impact</p><p>Each new layout is a change request, with a fresh chance of error each time.</p></div>
+    </div>
+    <div class="reason">
+      <span class="n">3</span>
+      <div><h3>It cannot say which kind of number it returns</h3>
+        <p>Messages sent add up. A rate must be recomputed. Unique clients must be recounted, because one person can be in two campaigns. All three look the same coming out of a query.</p></div>
+      <div class="impact"><p class="eyebrow">Business impact</p><p>The report guesses the total rule: 6 distinct clients were reached, yet two market cells add up to 9.</p></div>
+    </div>
+    <div class="reason">
+      <span class="n">4</span>
+      <div><h3>Every KPI works alone</h3>
+        <p>Six KPIs at twelve combinations of detail, subtotal and grand total would be 72 separate executions in a straightforward design, although they read the same messages and share ingredients.</p></div>
+      <div class="impact"><p class="eyebrow">Business impact</p><p>Run time and warehouse cost grow with every KPI and every subtotal added.</p></div>
+    </div>
+    <div class="reason">
+      <span class="n">5</span>
+      <div><h3>The business definition stays hidden</h3>
+        <p>Owner, population, time basis and what counts as "reached" exist only inside SQL. Does Reach count messages or people? The query gives one answer and does not say which.</p></div>
+      <div class="impact"><p class="eyebrow">Business impact</p><p>Owners cannot approve a definition they cannot read, and two reports can disagree unnoticed.</p></div>
+    </div>
+  </div>
+
+  <div class="fair">
+    <h3>What parameterised queries do well</h3>
+    <p>They bind dates and filter values safely, and they are a sound way to <strong>run</strong> a calculation. For a fixed report with one number per row they are adequate. The limits appear when the same KPI must be read at several levels at once. SQL stays the engine; it should stop being the definition.</p>
+  </div>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 3 ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 2 · The solution</span></div>
+  <h2>Define the KPI once, then ask for any view</h2>
+  <p class="lede" style="font-size:9.8pt">Separate what the business owns from what the reader chooses. The business defines <strong>measures</strong> (what is counted) and <strong>formulas</strong> (how measures combine into a KPI), with no grouping in either. The reader chooses the layout. An engine computes every cell and total from its own messages.</p>
+
+  <figure>
+    <svg viewBox="0 0 640 440" role="img" aria-labelledby="target-title target-desc" xmlns="http://www.w3.org/2000/svg">
+      <title id="target-title">Target: KPI definitions separated from report requests</title>
+      <desc id="target-desc">Business-owned measures and KPI formulas, together with a reader's report request, feed a calculation engine that reads message data and computes every cell, subtotal and grand total at its own scope, producing a pivot report that is verified by a self-check.</desc>
+      <defs>
+        <marker id="target-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#486274"/></marker>
+      </defs>
+      <rect width="640" height="440" fill="#ffffff"/>
+      <!-- zones -->
+      <rect x="16" y="16" width="392" height="116" rx="8" fill="rgba(11,46,69,0.02)" stroke="rgba(11,46,69,0.14)" stroke-width="0.8"/>
+      <text x="32" y="29" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.14em">DEFINE ONCE · OWNED BY THE BUSINESS</text>
+      <rect x="432" y="16" width="192" height="116" rx="8" fill="rgba(11,46,69,0.02)" stroke="rgba(11,46,69,0.14)" stroke-width="0.8"/>
+      <text x="448" y="29" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.14em">ASK · CHOSEN BY THE READER</text>
+      <!-- connectors (before nodes) -->
+      <line x1="200" y1="84" x2="224" y2="84" stroke="#486274" stroke-width="1.2" marker-end="url(#target-arrow)"/>
+      <line x1="308" y1="120" x2="308" y2="184" stroke="#486274" stroke-width="1.2" marker-end="url(#target-arrow)"/>
+      <path d="M528,120 V148 Q528,156 520,156 H428 Q420,156 420,164 V184" fill="none" stroke="#486274" stroke-width="1.2" marker-end="url(#target-arrow)"/>
+      <line x1="144" y1="224" x2="176" y2="224" stroke="#486274" stroke-width="1.2" marker-end="url(#target-arrow)"/>
+      <line x1="320" y1="264" x2="320" y2="304" stroke="#486274" stroke-width="1.2" marker-end="url(#target-arrow)"/>
+      <line x1="464" y1="344" x2="496" y2="344" stroke="#486274" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#target-arrow)"/>
+      <!-- connector labels -->
+      <rect x="316" y="146" width="72" height="12" rx="2" fill="#ffffff"/>
+      <text x="352" y="155" fill="#486274" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">DEFINITIONS</text>
+      <rect x="432" y="136" width="84" height="12" rx="2" fill="#ffffff"/>
+      <text x="474" y="145" fill="#486274" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">VIEW + FILTERS</text>
+      <rect x="328" y="278" width="72" height="12" rx="2" fill="#ffffff"/>
+      <text x="364" y="287" fill="#486274" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">EVERY SCOPE</text>
+      <!-- Measures (focal) -->
+      <rect x="32" y="48" width="168" height="72" rx="6" fill="#ffffff"/>
+      <rect x="32" y="48" width="168" height="72" rx="6" fill="rgba(55,124,73,0.09)" stroke="#377c49" stroke-width="1.2"/>
+      <text x="40" y="62" fill="#377c49" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">INGREDIENTS</text>
+      <text x="116" y="82" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Measures</text>
+      <text x="116" y="97" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">Sent · Delivered · Opened</text>
+      <text x="116" y="109" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">Clicked · Unique clients</text>
+      <!-- Formulas (focal) -->
+      <rect x="224" y="48" width="168" height="72" rx="6" fill="#ffffff"/>
+      <rect x="224" y="48" width="168" height="72" rx="6" fill="rgba(55,124,73,0.09)" stroke="#377c49" stroke-width="1.2"/>
+      <text x="232" y="62" fill="#377c49" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">RECIPES</text>
+      <text x="308" y="82" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">KPI formulas</text>
+      <text x="308" y="97" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">Delivery rate = Delivered ÷ Sent</text>
+      <text x="308" y="109" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">no grouping inside</text>
+      <!-- Request -->
+      <rect x="448" y="48" width="160" height="72" rx="6" fill="#ffffff"/>
+      <rect x="448" y="48" width="160" height="72" rx="6" fill="rgba(72,98,116,0.10)" stroke="#8597a2" stroke-width="1"/>
+      <text x="456" y="62" fill="#8597a2" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">REQUEST</text>
+      <text x="528" y="82" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Report layout</text>
+      <text x="528" y="97" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">rows · columns · filters</text>
+      <text x="528" y="109" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">which totals to show</text>
+      <!-- Data and engine row, moved up 24 to tighten the figure -->
+      <g transform="translate(0,-24)">
+      <!-- Data -->
+      <rect x="16" y="212" width="128" height="72" rx="6" fill="#ffffff"/>
+      <rect x="16" y="212" width="128" height="72" rx="6" fill="rgba(11,46,69,0.05)" stroke="#486274" stroke-width="1"/>
+      <text x="24" y="226" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">DATA</text>
+      <text x="80" y="250" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Message data</text>
+      <text x="80" y="265" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">one row per message</text>
+      <!-- Engine -->
+      <rect x="176" y="208" width="288" height="80" rx="6" fill="#ffffff" stroke="#0b2e45" stroke-width="1.2"/>
+      <text x="184" y="222" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">ENGINE</text>
+      <text x="320" y="246" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Calculation engine</text>
+      <text x="320" y="261" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">computes every cell, subtotal and grand total</text>
+      <text x="320" y="273" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">from the messages that belong to it</text>
+      </g>
+      <!-- Report row, moved up 48 -->
+      <g transform="translate(0,-48)">
+      <!-- Pivot -->
+      <rect x="176" y="352" width="288" height="80" rx="6" fill="#ffffff" stroke="#0b2e45" stroke-width="1.2"/>
+      <text x="184" y="366" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">REPORT</text>
+      <text x="320" y="390" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Pivot with trustworthy totals</text>
+      <text x="320" y="405" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">Typology › Tier › Campaign  ×  Year › Market</text>
+      <text x="320" y="417" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">detail · subtotals · grand totals</text>
+      <!-- Self-check -->
+      <rect x="496" y="356" width="128" height="72" rx="6" fill="#ffffff"/>
+      <rect x="496" y="356" width="128" height="72" rx="6" fill="rgba(11,46,69,0.02)" stroke="rgba(11,46,69,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="504" y="370" fill="#8597a2" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">CONTROL</text>
+      <text x="560" y="392" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Self-check</text>
+      <text x="560" y="407" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">parts add up to totals</text>
+      <text x="560" y="419" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">rates match their counts</text>
+      </g>
+      <g transform="translate(0,-56)">
+      <!-- legend -->
+      <line x1="16" y1="456" x2="624" y2="456" stroke="rgba(11,46,69,0.14)" stroke-width="0.8"/>
+      <text x="16" y="476" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+      <rect x="76" y="468" width="12" height="12" rx="2" fill="rgba(55,124,73,0.09)" stroke="#377c49" stroke-width="1"/>
+      <text x="96" y="478" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif">Defined once, reused in every report</text>
+      <rect x="272" y="468" width="12" height="12" rx="2" fill="#ffffff" stroke="#0b2e45" stroke-width="1"/>
+      <text x="292" y="478" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif">Runs on each request</text>
+      <rect x="404" y="468" width="12" height="12" rx="2" fill="rgba(72,98,116,0.10)" stroke="#8597a2" stroke-width="1"/>
+      <text x="424" y="478" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif">Input</text>
+      <rect x="472" y="468" width="12" height="12" rx="2" fill="rgba(11,46,69,0.02)" stroke="rgba(11,46,69,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="492" y="478" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif">Automatic control</text>
+      </g>
+    </svg>
+    <figcaption><b>Target.</b> The definition never changes when the layout does. A grand total uses the same formula as a detail cell.</figcaption>
+  </figure>
+
+  <table class="compare">
+    <thead><tr><th></th><th>KPI as a parameterised query</th><th>KPI as a definition</th></tr></thead>
+    <tbody>
+      <tr><td>What is stored</td><td>SQL text returning one number per group</td><td>Measures and a formula, readable by the owner</td></tr>
+      <tr><td>Changing the layout</td><td>Edit or regenerate the SQL</td><td>Change the request; the definition is untouched</td></tr>
+      <tr><td>Subtotals and totals</td><td>Extra queries, or sums of shown figures</td><td>Each computed from its own data, same formula</td></tr>
+      <tr><td>Adding a KPI</td><td>A new query and a new pass over the data</td><td>Often one new formula over existing measures</td></tr>
+      <tr><td>Checking a result</td><td>Rerun and compare by hand</td><td>Automatic on every report</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title" style="margin-top:5mm"><h3>One formula, three scopes</h3><span class="eyebrow">Delivery rate = Delivered ÷ Sent · Synthetic example, 100 messages</span></div>
+  <div class="scopes">
+    <div class="scope">
+      <p class="eyebrow">Detail cell</p>
+      <p class="calc">81 ÷ 90 = <b>90.0%</b></p>
+      <p class="what">Campaign A</p>
+    </div>
+    <div class="scope">
+      <p class="eyebrow">Detail cell</p>
+      <p class="calc">5 ÷ 10 = <b>50.0%</b></p>
+      <p class="what">Campaign B</p>
+    </div>
+    <div class="scope total">
+      <p class="eyebrow" style="color:var(--accent)">Grand total</p>
+      <p class="calc">86 ÷ 100 = <b>86.0%</b></p>
+      <p class="what">Averaging the two campaign rates gives 70.0%</p>
+    </div>
+  </div>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 4 ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 3 · Making it real</span></div>
+  <h2>The definition, and three ways to build it</h2>
+
+  <div class="section-title" style="margin-top:5mm"><h3>Three kinds of number, three rules for a total</h3><span class="eyebrow">Stated in the definition, never guessed</span></div>
+  <table class="kinds" style="margin-top:3mm">
+    <thead><tr><th>Kind</th><th>Example</th><th>Rule for a total</th><th>If cells are simply combined</th></tr></thead>
+    <tbody>
+      <tr><td>Count</td><td>Messages sent</td><td>Add the parts, or count again</td><td>Correct, provided each message sits in one part only</td></tr>
+      <tr><td>Rate</td><td>Delivery, open and click rates</td><td>Total numerator ÷ total denominator</td><td>An average is right only when group size and group rate are unrelated</td></tr>
+      <tr><td>Unique audience</td><td>Clients reached</td><td>Count each person once across the whole scope</td><td>A sum counts a client again in each campaign, market or year</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title"><h3>Three ways to implement it</h3><span class="eyebrow">Each reproduced the same 56 test values</span></div>
+  <div class="options">
+    <div class="card solution">
+      <p class="eyebrow">Preferred</p>
+      <h3>Databricks metric views</h3>
+      <p>Measures are defined in the data catalogue and governed with the data. Native to Databricks, and tested on a Databricks warehouse.</p>
+    </div>
+    <div class="card">
+      <p class="eyebrow">Alternative</p>
+      <h3>Malloy</h3>
+      <p>An open-source language built on this idea. It matched the same values in a local test. Consider it if several database engines must share one set of definitions.</p>
+    </div>
+    <div class="card">
+      <p class="eyebrow">For gaps</p>
+      <h3>Generated SQL</h3>
+      <p>Definitions kept in a catalogue and compiled to SQL. The most control and the most to maintain; use it where the native option falls short.</p>
+    </div>
+  </div>
+  <p class="note">In all three, SQL still executes the calculation. Pages 5 to 7 show each option on one example; page 8 compares them.</p>
+
+  <div class="section-title"><h3>The example used on the next three pages</h3><span class="eyebrow">Eight messages · Typology by market · With totals</span></div>
+  <div class="example">
+    <div>
+      <p>Each option answers the same small request: three KPIs, <strong>Typology in rows, Market in columns, totals on both axes</strong>. The data is eight messages, so every answer can be checked by hand.</p>
+      <p>The three KPIs cover the three kinds of number: Sent is a count, Delivery rate is a rate, Unique clients is a unique audience.</p>
+      <p>Look at Unique clients. Each market total shows 3 and the grand total shows 5, not 6: one VIP client received messages in both markets and counts once.</p>
+    </div>
+    <div>
+      <table class="pivot">
+        <thead><tr><th></th><th class="num">Hong Kong</th><th class="num">Singapore</th><th class="num">All markets</th></tr></thead>
+        <tbody>
+          <tr><td>New</td><td class="num">3 · 66.7% · 2</td><td class="num">1 · 100% · 1</td><td class="num t">4 · 75.0% · 3</td></tr>
+          <tr><td>VIP</td><td class="num">1 · 100% · 1</td><td class="num">3 · 66.7% · 2</td><td class="num t">4 · 75.0% · 2</td></tr>
+          <tr class="t"><td>All typologies</td><td class="num">4 · 75.0% · 3</td><td class="num">4 · 75.0% · 3</td><td class="num">8 · 75.0% · 5</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Each cell reads: messages sent · delivery rate · unique clients. Shaded cells are totals, each computed from its own messages. Synthetic data.</p>
+    </div>
+  </div>
+
+  <div class="msgs">
+    <table class="mini">
+      <thead><tr><th>Message</th><th>Client</th><th>Typology</th><th>Market</th><th>Delivered</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>c1</td><td>New</td><td>Hong Kong</td><td>yes</td></tr>
+        <tr><td>2</td><td>c1</td><td>New</td><td>Hong Kong</td><td>yes</td></tr>
+        <tr><td>3</td><td>c2</td><td>New</td><td>Hong Kong</td><td>no</td></tr>
+        <tr><td>4</td><td>c3</td><td>New</td><td>Singapore</td><td>yes</td></tr>
+      </tbody>
+    </table>
+    <table class="mini">
+      <thead><tr><th>Message</th><th>Client</th><th>Typology</th><th>Market</th><th>Delivered</th></tr></thead>
+      <tbody>
+        <tr><td>5</td><td>c4</td><td>VIP</td><td>Hong Kong</td><td>yes</td></tr>
+        <tr><td>6</td><td>c4</td><td>VIP</td><td>Singapore</td><td>yes</td></tr>
+        <tr><td>7</td><td>c5</td><td>VIP</td><td>Singapore</td><td>yes</td></tr>
+        <tr><td>8</td><td>c5</td><td>VIP</td><td>Singapore</td><td>no</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note" style="margin-top:1.5mm">The eight messages. Client c4 appears in both markets, which is why unique clients cannot be added across markets.</p>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 5 · Metric views ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 3 · Implementation · Option 1 of 3</span></div>
+  <div class="opt-head"><h2>Databricks metric views</h2><span class="badge pref">Preferred</span></div>
+  <p class="lede" style="font-size:9.8pt">A metric view is an object in the data catalogue that stores measures and the formulas built on them. Reports read it with ordinary SQL plus one function, <code>MEASURE()</code>, and choose the grouping in the query. It is preferred where the platform is Databricks, because the definition is governed alongside the data.</p>
+
+  <div class="codes wide-left">
+    <div>
+      <div class="codehead"><span class="n">1</span><h3>Define once</h3><span class="eyebrow">No grouping in the definition</span></div>
+<pre class="code">CREATE OR REPLACE VIEW crm.gold.engagement_kpi
+<b>WITH METRICS</b> LANGUAGE YAML AS $$
+version: 1.1
+comment: "Engagement KPIs, one row per message sent"
+source: crm.silver.message
+<b>dimensions:</b>
+  - name: typology
+    expr: typology
+  - name: market
+    expr: market
+<b>measures:</b>
+  - name: sent
+    expr: COUNT(*)
+  - name: delivered
+    expr: COUNT(*) FILTER (WHERE is_delivered)
+  - name: unique_clients
+    expr: COUNT(DISTINCT client_id)
+  - name: delivery_rate
+    expr: <b>MEASURE(delivered)</b> * 1.0 / NULLIF(<b>MEASURE(sent)</b>, 0)
+    comment: "Delivered messages divided by sent messages"
+$$;</pre>
+    </div>
+    <div>
+      <div class="block">
+        <div class="codehead"><span class="n">2</span><h3>Ask for a view</h3><span class="eyebrow">Reader's choice</span></div>
+<pre class="code">SELECT typology, market,
+       GROUPING_ID(typology, market) AS gid,
+       <b>MEASURE(sent)</b>           AS sent,
+       <b>MEASURE(delivery_rate)</b>  AS delivery_rate,
+       <b>MEASURE(unique_clients)</b> AS unique_clients
+FROM crm.gold.engagement_kpi
+GROUP BY <b>GROUPING SETS</b> (
+  (typology, market),   <i>-- detail cells</i>
+  (typology),           <i>-- typology totals</i>
+  (market),             <i>-- market totals</i>
+  ()                    <i>-- grand total</i>
+);</pre>
+      </div>
+      <div class="block">
+        <div class="codehead"><span class="n">3</span><h3>Read the result</h3><span class="eyebrow">One row per group</span></div>
+        <table class="mini">
+          <thead><tr><th>gid</th><th>The row is</th><th class="num">Rows here</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">0</td><td>a detail cell</td><td class="num">4</td></tr>
+            <tr><td class="mono">1</td><td>a typology total, all markets</td><td class="num">2</td></tr>
+            <tr><td class="mono">2</td><td>a market total, all typologies</td><td class="num">2</td></tr>
+            <tr><td class="mono">3</td><td>the grand total</td><td class="num">1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="facts">
+    <div>
+      <h3>How it works</h3>
+      <ol>
+        <li>The view lists what may be grouped by (dimensions) and what is counted (measures). It contains no <code>GROUP BY</code>.</li>
+        <li>A rate is written from other measures. The engine evaluates numerator and denominator at whatever grouping the reader asks for, then divides.</li>
+        <li><code>GROUPING SETS</code> requests detail, subtotals and grand total together. <code>gid</code> tells a total from a genuine "unknown" value.</li>
+      </ol>
+    </div>
+    <div>
+      <h3>Strengths</h3>
+      <ul>
+        <li>One definition in Unity Catalog, with the permissions and lineage of the data.</li>
+        <li>Consumers keep writing SQL. Nothing extra to run.</li>
+        <li>The <code>comment</code> puts the business meaning next to the formula.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Watch for</h3>
+      <ul>
+        <li>Write the <code>NULLIF</code> guard in every rate. In its default mode Databricks raises an error on division by zero.</li>
+        <li>Exact unique counts at many levels can be slow. Measure before committing.</li>
+        <li>Needs a recent runtime: 16.4 or later to create a metric view, per Databricks documentation.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tested">
+    <div><p class="eyebrow">Tested</p><p>A version with five dimensions and twelve grouping sets ran on a Databricks serverless SQL warehouse on 12 November 2026 and matched all 56 groups. The two-dimension form on this page is that statement reduced; it has not been run in this form.</p></div>
+    <div class="when"><p class="eyebrow" style="color:var(--accent)">Still to prove before production</p><p>Report filters, row-level access rules under the reader's identity, empty and unknown groups, and cost at real volumes. These are the remaining acceptance tests.</p></div>
+  </div>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 6 · Malloy ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 3 · Implementation · Option 2 of 3</span></div>
+  <div class="opt-head"><h2>Malloy</h2><span class="badge">Alternative</span></div>
+  <p class="lede" style="font-size:9.8pt">Malloy is an open-source language for describing data. A <strong>source</strong> declares measures once. A <strong>query</strong> nests one level of the report inside another. Malloy compiles the whole request into a single SQL statement and returns a tree shaped like the report.</p>
+
+  <div class="codes even">
+    <div>
+      <div class="block">
+        <div class="codehead"><span class="n">1</span><h3>Define once</h3><span class="eyebrow">No grouping in the definition</span></div>
+<pre class="code">source: message is duckdb.table('message') extend {
+  <b>measure:</b>
+    sent is count()
+    delivered is count() { where: is_delivered }
+    unique_clients is count(client_id)
+    delivery_rate is <b>delivered / nullif(sent, 0)</b>
+}</pre>
+      </div>
+      <div class="block">
+        <div class="codehead"><span class="n">3</span><h3>Read the result</h3><span class="eyebrow">A tree, not flat rows</span></div>
+        <table class="mini">
+          <thead><tr><th>Level returned</th><th class="num">Sent</th><th class="num">Rate</th><th class="num">Clients</th></tr></thead>
+          <tbody>
+            <tr class="tot"><td>Grand total</td><td class="num">8</td><td class="num">75.0%</td><td class="num">5</td></tr>
+            <tr><td class="l1">by_market · HK</td><td class="num">4</td><td class="num">75.0%</td><td class="num">3</td></tr>
+            <tr><td class="l1">by_market · SG</td><td class="num">4</td><td class="num">75.0%</td><td class="num">3</td></tr>
+            <tr class="tot"><td class="l1">by_typology · New</td><td class="num">4</td><td class="num">75.0%</td><td class="num">3</td></tr>
+            <tr><td class="l2">by_market · HK</td><td class="num">3</td><td class="num">66.7%</td><td class="num">2</td></tr>
+            <tr><td class="l2">by_market · SG</td><td class="num">1</td><td class="num">100.0%</td><td class="num">1</td></tr>
+            <tr class="tot"><td class="l1">by_typology · VIP</td><td class="num">4</td><td class="num">75.0%</td><td class="num">2</td></tr>
+            <tr><td class="l2">by_market · HK</td><td class="num">1</td><td class="num">100.0%</td><td class="num">1</td></tr>
+            <tr><td class="l2">by_market · SG</td><td class="num">3</td><td class="num">66.7%</td><td class="num">2</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="codehead"><span class="n">2</span><h3>Ask for a view</h3><span class="eyebrow">One nest per report level</span></div>
+<pre class="code">query: pivot is message -&gt; {
+  <i>// grand total</i>
+  aggregate: sent, delivery_rate, unique_clients
+
+  <i>// market totals</i>
+  <b>nest:</b> by_market is {
+    group_by: market
+    aggregate: sent, delivery_rate, unique_clients
+  }
+
+  <i>// typology totals, with their detail cells inside</i>
+  <b>nest:</b> by_typology is {
+    group_by: typology
+    aggregate: sent, delivery_rate, unique_clients
+    <b>nest:</b> by_market is {
+      group_by: market
+      aggregate: sent, delivery_rate, unique_clients
+    }
+  }
+}</pre>
+    </div>
+  </div>
+
+  <div class="facts">
+    <div>
+      <h3>How it works</h3>
+      <ol>
+        <li><code>measure:</code> names a calculation with no grouping. A rate is written from two other measures.</li>
+        <li><code>group_by</code> with <code>aggregate</code> evaluates the measures at one level. <code>nest:</code> puts a finer level inside it.</li>
+        <li>Each level is computed from its own rows. Malloy writes one SQL statement that repeats each row once per level; it does not use <code>GROUPING SETS</code>.</li>
+      </ol>
+    </div>
+    <div>
+      <h3>Strengths</h3>
+      <ul>
+        <li>The same model runs on several engines: connectors exist for DuckDB, BigQuery, Snowflake, Postgres, Trino and Databricks.</li>
+        <li>The result has the shape of the report's row hierarchy.</li>
+        <li>Open source, and the model is a text file under version control.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Watch for</h3>
+      <ul>
+        <li>No automatic zero guard: an unguarded rate returned <code>NaN</code>. Write <code>nullif</code> in every rate.</li>
+        <li>A column axis means repeating a nest at each row level, and the pivot code must flatten the tree.</li>
+        <li>A second language and a runtime to operate. Packages are at version 0.0.x.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tested">
+    <div><p class="eyebrow">Tested</p><p>This model and query ran on DuckDB with Malloy 0.0.437 and returned the nine groups above. The five-dimension version matched all 56 groups, also on DuckDB. Nothing was run on Databricks.</p></div>
+    <div class="when"><p class="eyebrow" style="color:var(--accent)">Choose it when</p><p>The same definitions must run on more than one database engine, or a nested result is what the consumer needs. Then run the same acceptance tests through its Databricks connector first.</p></div>
+  </div>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 7 · Generated SQL ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 3 · Implementation · Option 3 of 3</span></div>
+  <div class="opt-head"><h2>Generated SQL</h2><span class="badge">For gaps</span></div>
+  <p class="lede" style="font-size:9.8pt">Keep the definitions in your own catalogue and let a small <strong>planner</strong> write the SQL for each request. It gives the most control and the most to maintain, so use it where the native option falls short.</p>
+
+  <div class="codes even">
+    <div>
+      <div class="codehead"><span class="n">1</span><h3>Define once</h3><span class="eyebrow">Catalogue entry · proposed format</span></div>
+<pre class="code"><b>measures:</b>
+  sent:
+    expression: COUNT(*)
+    kind: count
+  delivered:
+    expression: COUNT(*) FILTER (WHERE is_delivered)
+    kind: count
+  unique_clients:
+    expression: COUNT(DISTINCT client_id)
+    kind: unique
+
+<b>kpis:</b>
+  delivery_rate:
+    label: Delivery Rate
+    formula: <b>ratio(delivered, sent)</b>
+    owner: CRM metric owner
+    status: unconfirmed</pre>
+    </div>
+    <div>
+      <div class="block">
+        <div class="codehead"><span class="n">2</span><h3>Ask for a view</h3><span class="eyebrow">A request with no SQL in it</span></div>
+<pre class="code">{
+  "kpis": ["sent", "delivery_rate", "unique_clients"],
+  "rows": ["typology"],
+  "cols": ["market"],
+  "totals": { "rows": true, "cols": true }
+}</pre>
+      </div>
+      <div class="block">
+        <div class="codehead"><span class="n">4</span><h3>Read the result</h3><span class="eyebrow">Nine rows, three shown</span></div>
+        <table class="mini cols">
+          <thead><tr><th>typology</th><th>market</th><th>gid</th><th class="num">sent</th><th class="num">delivery_rate</th><th class="num">unique_clients</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">New</td><td class="mono">HK</td><td class="mono">0</td><td class="num">3</td><td class="num">0.667</td><td class="num">2</td></tr>
+            <tr><td class="mono">VIP</td><td class="mono">null</td><td class="mono">1</td><td class="num">4</td><td class="num">0.750</td><td class="num">2</td></tr>
+            <tr class="tot"><td class="mono">null</td><td class="mono">null</td><td class="mono">3</td><td class="num">8</td><td class="num">0.750</td><td class="num">5</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="block" style="margin-top:4mm">
+    <div class="codehead"><span class="n">3</span><h3>What the planner generates</h3><span class="eyebrow">Produced by the prototype planner · Executed</span></div>
+<pre class="code">WITH agg AS (
+  SELECT typology, market,
+    GROUPING_ID(typology, market) AS gid,
+    COUNT(*) AS sent,
+    COUNT(*) FILTER (WHERE is_delivered) AS delivered,
+    COUNT(DISTINCT client_id) AS unique_clients
+  FROM message
+  WHERE TRUE
+  GROUP BY <b>GROUPING SETS</b> ((typology, market), (typology), (market), ())
+  HAVING COUNT(*) &gt; 0
+)
+SELECT typology, market, gid, sent, delivered, unique_clients, <b>delivered * 1.0 / NULLIF(sent, 0)</b> AS delivery_rate
+FROM agg</pre>
+  </div>
+
+  <div class="facts">
+    <div>
+      <h3>How it works</h3>
+      <ol>
+        <li>The planner checks every requested name against the catalogue and refuses unknown ones.</li>
+        <li>It writes each needed measure once in the inner block, with one grouping set per report level.</li>
+        <li>Formulas run outside, after aggregation. <code>ratio()</code> always adds the zero guard, and <code>HAVING</code> drops empty groups.</li>
+      </ol>
+    </div>
+    <div>
+      <h3>Strengths</h3>
+      <ul>
+        <li>Full control of the plan: a heavy unique count can run in its own statement.</li>
+        <li>Works on any SQL engine.</li>
+        <li>Guards, validation and result checks live in one place.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Watch for</h3>
+      <ul>
+        <li>You own the planner: validation, security, totals and tests.</li>
+        <li>Names come from the catalogue and values are bound as parameters, never pasted into text.</li>
+        <li>Avoid two definitions of one KPI if metric views exist too.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tested">
+    <div><p class="eyebrow">Tested</p><p>Generated by the prototype planner and run on DuckDB: the nine expected groups. The five-dimension version matched all 56 groups on DuckDB and on a Databricks warehouse. The catalogue and request formats are proposals.</p></div>
+    <div class="when"><p class="eyebrow" style="color:var(--accent)">Choose it when</p><p>An acceptance test shows a gap in the native option, such as a total it cannot express or a unique count that is too slow. Build that capability only.</p></div>
+  </div>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 8 · Choosing ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 3 · Implementation · Choosing</span></div>
+  <h2>Choosing between the three</h2>
+  <p class="lede" style="font-size:9.8pt">All three keep the KPI definition free of grouping and compute each total from its own data, so they return the same numbers. They differ in where the definition lives, what has to be operated, and how much has been proven on Databricks. Whichever is chosen, each KPI keeps one authoritative definition.</p>
+
+  <table class="compare3" style="margin-top:4.5mm">
+    <thead><tr><th></th><th>Databricks metric views</th><th>Malloy</th><th>Generated SQL</th></tr></thead>
+    <tbody>
+      <tr><td>Where the definition lives</td><td>An object in Unity Catalog</td><td>A model file under version control</td><td>Your own catalogue tables</td></tr>
+      <tr><td>How a report asks</td><td>SQL with <code>MEASURE()</code> and grouping sets</td><td>A Malloy query with nested levels</td><td>A request: KPIs, rows, columns, totals</td></tr>
+      <tr><td>What comes back</td><td>Flat rows with a grouping id</td><td>A tree shaped like the report</td><td>Flat rows with a grouping id</td></tr>
+      <tr><td>Zero-denominator guard</td><td>Written in each rate</td><td>Written in each rate</td><td>Generated for every rate</td></tr>
+      <tr><td>Access control</td><td>Unity Catalog; to confirm in acceptance tests</td><td>Through the database connection; untested</td><td>To build: run as the reader</td></tr>
+      <tr><td>Extra software to run</td><td>None</td><td>Malloy compiler and runtime</td><td>The planner service</td></tr>
+      <tr><td>Proven so far</td><td>56 of 56 groups on a Databricks warehouse</td><td>56 of 56 groups on local DuckDB</td><td>56 of 56 groups on DuckDB and a Databricks warehouse</td></tr>
+      <tr><td>Choose it when</td><td>Databricks is the platform</td><td>Several engines, or nested output</td><td>The native option has a proven gap</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title"><h3>A decision path</h3><span class="eyebrow">Start once the KPI definitions are agreed</span></div>
+  <figure style="margin:2.5mm auto 0; width:88%">
+    <svg viewBox="0 0 640 372" role="img" aria-labelledby="choose-title choose-desc" xmlns="http://www.w3.org/2000/svg">
+      <title id="choose-title">Decision path for choosing an implementation</title>
+      <desc id="choose-desc">Starting from agreed KPI definitions: if several database engines or nested results are needed, evaluate Malloy; otherwise, if metric views pass the acceptance tests, use Databricks metric views; if they do not, generate SQL for the failing capability only.</desc>
+      <defs>
+        <marker id="choose-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#486274"/></marker>
+        <marker id="choose-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#377c49"/></marker>
+      </defs>
+      <rect width="640" height="372" fill="#ffffff"/>
+      <!-- connectors -->
+      <line x1="200" y1="48" x2="200" y2="72" stroke="#486274" stroke-width="1.2" marker-end="url(#choose-arrow)"/>
+      <line x1="304" y1="112" x2="400" y2="112" stroke="#486274" stroke-width="1.2" marker-end="url(#choose-arrow)"/>
+      <line x1="200" y1="152" x2="200" y2="184" stroke="#486274" stroke-width="1.2" marker-end="url(#choose-arrow)"/>
+      <line x1="304" y1="224" x2="400" y2="224" stroke="#377c49" stroke-width="1.2" marker-end="url(#choose-arrow-accent)"/>
+      <line x1="200" y1="264" x2="200" y2="296" stroke="#486274" stroke-width="1.2" marker-end="url(#choose-arrow)"/>
+      <!-- branch labels -->
+      <rect x="336" y="92" width="32" height="12" rx="2" fill="#ffffff"/>
+      <text x="352" y="101" fill="#486274" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">YES</text>
+      <rect x="208" y="162" width="24" height="12" rx="2" fill="#ffffff"/>
+      <text x="220" y="171" fill="#486274" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">NO</text>
+      <rect x="336" y="204" width="32" height="12" rx="2" fill="#ffffff"/>
+      <text x="352" y="213" fill="#377c49" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">YES</text>
+      <rect x="208" y="274" width="24" height="12" rx="2" fill="#ffffff"/>
+      <text x="220" y="283" fill="#486274" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">NO</text>
+      <!-- start -->
+      <rect x="112" y="16" width="176" height="32" rx="16" fill="#ffffff" stroke="#0b2e45" stroke-width="1"/>
+      <text x="200" y="36" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">KPI definitions agreed</text>
+      <!-- decision 1 -->
+      <polygon points="200,72 304,112 200,152 96,112" fill="#ffffff" stroke="#0b2e45" stroke-width="1"/>
+      <text x="200" y="109" fill="#0b2e45" font-size="9" font-weight="500" font-family="'Work Sans', sans-serif" text-anchor="middle">Several database engines,</text>
+      <text x="200" y="121" fill="#0b2e45" font-size="9" font-weight="500" font-family="'Work Sans', sans-serif" text-anchor="middle">or nested results needed?</text>
+      <!-- decision 2 -->
+      <polygon points="200,184 304,224 200,264 96,224" fill="#ffffff" stroke="#0b2e45" stroke-width="1"/>
+      <text x="200" y="221" fill="#0b2e45" font-size="9" font-weight="500" font-family="'Work Sans', sans-serif" text-anchor="middle">Do metric views pass</text>
+      <text x="200" y="233" fill="#0b2e45" font-size="9" font-weight="500" font-family="'Work Sans', sans-serif" text-anchor="middle">the acceptance tests?</text>
+      <!-- outcome: Malloy -->
+      <rect x="400" y="84" width="224" height="56" rx="6" fill="#ffffff" stroke="#0b2e45" stroke-width="1"/>
+      <text x="512" y="108" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Evaluate Malloy</text>
+      <text x="512" y="124" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">same tests, through its Databricks connector</text>
+      <!-- outcome: metric views (focal) -->
+      <rect x="400" y="196" width="224" height="56" rx="6" fill="#ffffff"/>
+      <rect x="400" y="196" width="224" height="56" rx="6" fill="rgba(55,124,73,0.09)" stroke="#377c49" stroke-width="1.2"/>
+      <text x="512" y="220" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Use Databricks metric views</text>
+      <text x="512" y="236" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">one governed definition, nothing extra to run</text>
+      <!-- outcome: generated SQL -->
+      <rect x="88" y="296" width="224" height="56" rx="6" fill="#ffffff" stroke="#0b2e45" stroke-width="1"/>
+      <text x="200" y="320" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Generate SQL for that gap only</text>
+      <text x="200" y="336" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">keep metric views for everything that passes</text>
+      <!-- side note -->
+      <text x="400" y="312" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif">Acceptance tests: the reference scenarios, report filters,</text>
+      <text x="400" y="324" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif">access rules, empty and unknown groups, and cost</text>
+      <text x="400" y="336" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif">at real volumes, each checked against a reference.</text>
+    </svg>
+    <figcaption><b>Preferred path in green.</b> Diamonds are decisions, rectangles are outcomes.</figcaption>
+  </figure>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 9 · Migration strategy ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 4 · Migration · Strategy</span></div>
+  <h2>Migrate by inferring the definitions</h2>
+  <p class="lede" style="font-size:9.8pt">A registry table typically holds every KPI as a SQL template with a grouping placeholder such as <code>{{ group_by_list }}</code>. Each template already contains the <strong>measures</strong> and the <strong>expression</strong> of its KPI; they are simply not separated. A tool can read the template, infer both, and prove that the result gives the same numbers. A person then names the measures and confirms the meaning.</p>
+
+  <figure>
+    <svg viewBox="0 0 640 288" role="img" aria-labelledby="migrate-title migrate-desc" xmlns="http://www.w3.org/2000/svg">
+      <title id="migrate-title">Migration path from a legacy template to a published definition</title>
+      <desc id="migrate-desc">A legacy registry template is parsed and sorted, its measures and expression are inferred, old and new results are compared on the same data, the owner confirms the meaning, and the definition is published while the template is retired.</desc>
+      <defs>
+        <marker id="migrate-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#486274"/></marker>
+      </defs>
+      <rect width="640" height="288" fill="#ffffff"/>
+      <!-- connectors -->
+      <line x1="192" y1="52" x2="232" y2="52" stroke="#486274" stroke-width="1.2" marker-end="url(#migrate-arrow)"/>
+      <line x1="408" y1="52" x2="448" y2="52" stroke="#486274" stroke-width="1.2" marker-end="url(#migrate-arrow)"/>
+      <path d="M536,88 V112 Q536,120 528,120 H112 Q104,120 104,128 V152" fill="none" stroke="#486274" stroke-width="1.2" marker-end="url(#migrate-arrow)"/>
+      <line x1="192" y1="188" x2="232" y2="188" stroke="#486274" stroke-width="1.2" marker-end="url(#migrate-arrow)"/>
+      <line x1="408" y1="188" x2="448" y2="188" stroke="#486274" stroke-width="1.2" marker-end="url(#migrate-arrow)"/>
+      <rect x="284" y="100" width="72" height="12" rx="2" fill="#ffffff"/>
+      <text x="320" y="109" fill="#486274" font-size="8" font-family="'Geist Mono', monospace" text-anchor="middle" letter-spacing="0.06em">CANDIDATES</text>
+      <!-- legacy template -->
+      <rect x="16" y="16" width="176" height="72" rx="6" fill="#ffffff"/>
+      <rect x="16" y="16" width="176" height="72" rx="6" fill="rgba(72,98,116,0.10)" stroke="#8597a2" stroke-width="1"/>
+      <text x="24" y="30" fill="#8597a2" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">REGISTRY</text>
+      <text x="104" y="50" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Legacy template</text>
+      <text x="104" y="66" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">SQL text with a grouping slot</text>
+      <text x="104" y="78" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">one per KPI</text>
+      <!-- 1 parse and sort -->
+      <rect x="232" y="16" width="176" height="72" rx="6" fill="#ffffff" stroke="#0b2e45" stroke-width="1"/>
+      <text x="240" y="30" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">STEP 1</text>
+      <text x="320" y="50" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Parse and sort</text>
+      <text x="320" y="66" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">read the SQL as a tree</text>
+      <text x="320" y="78" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">keep the shapes it can rewrite</text>
+      <!-- 2 infer (focal) -->
+      <rect x="448" y="16" width="176" height="72" rx="6" fill="#ffffff"/>
+      <rect x="448" y="16" width="176" height="72" rx="6" fill="rgba(55,124,73,0.09)" stroke="#377c49" stroke-width="1.2"/>
+      <text x="456" y="30" fill="#377c49" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">STEP 2</text>
+      <text x="536" y="50" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Infer</text>
+      <text x="536" y="66" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">measures: what is aggregated</text>
+      <text x="536" y="78" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">expression: computed afterwards</text>
+      <!-- 3 prove -->
+      <rect x="16" y="152" width="176" height="72" rx="6" fill="#ffffff" stroke="#0b2e45" stroke-width="1"/>
+      <text x="24" y="166" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">STEP 3</text>
+      <text x="104" y="186" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Prove</text>
+      <text x="104" y="202" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">old and new run on the same data</text>
+      <text x="104" y="214" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">every value compared</text>
+      <!-- 4 confirm -->
+      <rect x="232" y="152" width="176" height="72" rx="6" fill="#ffffff" stroke="#0b2e45" stroke-width="1"/>
+      <text x="240" y="166" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">STEP 4</text>
+      <text x="320" y="186" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Confirm</text>
+      <text x="320" y="202" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">the owner names the measures</text>
+      <text x="320" y="214" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">and signs the meaning</text>
+      <!-- published definition (focal) -->
+      <rect x="448" y="152" width="176" height="72" rx="6" fill="#ffffff"/>
+      <rect x="448" y="152" width="176" height="72" rx="6" fill="rgba(55,124,73,0.09)" stroke="#377c49" stroke-width="1.2"/>
+      <text x="456" y="166" fill="#377c49" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.1em">RESULT</text>
+      <text x="536" y="186" fill="#0b2e45" font-size="12" font-weight="600" font-family="'Work Sans', sans-serif" text-anchor="middle">Published definition</text>
+      <text x="536" y="202" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">a metric view or catalogue entry</text>
+      <text x="536" y="214" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif" text-anchor="middle">the template is retired</text>
+      <!-- legend -->
+      <line x1="16" y1="248" x2="624" y2="248" stroke="rgba(11,46,69,0.14)" stroke-width="0.8"/>
+      <text x="16" y="270" fill="#486274" font-size="7" font-family="'Geist Mono', monospace" letter-spacing="0.14em">LEGEND</text>
+      <rect x="76" y="260" width="12" height="12" rx="2" fill="rgba(55,124,73,0.09)" stroke="#377c49" stroke-width="1"/>
+      <text x="96" y="270" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif">The definition: inferred, then published</text>
+      <rect x="296" y="260" width="12" height="12" rx="2" fill="#ffffff" stroke="#0b2e45" stroke-width="1"/>
+      <text x="316" y="270" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif">Step</text>
+      <rect x="364" y="260" width="12" height="12" rx="2" fill="rgba(72,98,116,0.10)" stroke="#8597a2" stroke-width="1"/>
+      <text x="384" y="270" fill="#486274" font-size="9" font-family="'Work Sans', sans-serif">What exists today</text>
+    </svg>
+    <figcaption><b>The path of one KPI.</b> Steps 1 to 3 are automatic. Step 4 is a person's decision and cannot be automated.</figcaption>
+  </figure>
+
+  <div class="section-title"><h3>What can be inferred, and what a person decides</h3><span class="eyebrow">The line between the tool and the owner</span></div>
+  <table class="duo" style="margin-top:3mm">
+    <thead><tr><th>Inferred from the SQL</th><th>Decided by a person</th></tr></thead>
+    <tbody>
+      <tr><td>The source table and the row filters</td><td>Whether that population is the intended one</td></tr>
+      <tr><td>Each aggregate, as a measure</td><td>A business name for each measure</td></tr>
+      <tr><td>The expression that combines the measures</td><td>Whether it matches what the KPI should mean (Reach, click-to-open rate)</td></tr>
+      <tr><td>Measures that several KPIs share</td><td>Which definition stands when two KPIs disagree</td></tr>
+      <tr><td>Whether old and new return the same values</td><td>Whether a difference is a defect or a behaviour to keep</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title"><h3>Three outcomes for a template</h3><span class="eyebrow">Twelve test templates: nine rewritten, three refused</span></div>
+  <div class="outcomes">
+    <div class="card solution">
+      <p class="eyebrow">Automatic</p>
+      <h3>Rewritten as it stands</h3>
+      <p>One aggregation over one source, grouped by the slot alone, with its parameters and optional filters kept as they are.</p>
+    </div>
+    <div class="card">
+      <p class="eyebrow">With a declared rule</p>
+      <h3>Rewritten after a check</h3>
+      <p>A join is accepted when the data shows it keeps one row per message. A row filter used by only some KPIs moves into the measure, which raises the empty-group question.</p>
+    </div>
+    <div class="card">
+      <p class="eyebrow">By hand</p>
+      <h3>Listed and left alone</h3>
+      <p>Nested aggregations, window functions, joins that multiply rows, several sources. The tool refuses them and says why.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 10 · Migration worked example ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 4 · Migration · Worked example</span></div>
+  <h2>The inference, on three templates</h2>
+  <p class="lede" style="font-size:9.8pt">Three templates go in. Three measures, three expressions and one statement with every total come out. The legacy templates, run one grouping at a time, are the reference.</p>
+
+  <div class="codes even" style="margin-top:3.5mm">
+    <div>
+      <div class="codehead"><span class="n">1</span><h3>Before</h3><span class="eyebrow">Templates in the registry style</span></div>
+<pre class="code"><i>-- kpi: sent</i>
+SELECT <b>{{ group_by_list }}</b>, COUNT(*) AS kpi_value
+FROM message C
+WHERE 1 = 1
+GROUP BY <b>{{ group_by_list }}</b>;
+
+<i>-- kpi: delivery_rate</i>
+SELECT <b>{{ group_by_list }}</b>,
+       COUNT(*) FILTER (WHERE C.is_delivered) * 1.0
+         / NULLIF(COUNT(*), 0) AS kpi_value
+FROM message C
+WHERE 1 = 1
+GROUP BY <b>{{ group_by_list }}</b>;
+
+<i>-- kpi: reached_clients</i>
+SELECT <b>{{ group_by_list }}</b>,
+       COUNT(DISTINCT C.client_id) AS kpi_value
+FROM message C
+WHERE 1 = 1 AND C.is_delivered
+GROUP BY <b>{{ group_by_list }}</b>;</pre>
+    </div>
+    <div>
+      <div class="codehead"><span class="n">2</span><h3>Inferred</h3><span class="eyebrow">Output of the tool</span></div>
+      <table class="inferred">
+        <tbody>
+          <tr class="head"><td colspan="2">Measures · three found, one shared</td></tr>
+          <tr><td class="k">m1</td><td><span class="x">COUNT(*)</span><br>Used by Sent and by Delivery rate</td></tr>
+          <tr><td class="k">m2</td><td><span class="x">COUNT(*) FILTER(WHERE C.is_delivered)</span><br>Used by Delivery rate</td></tr>
+          <tr><td class="k">m3</td><td><span class="x">COUNT(DISTINCT C.client_id) FILTER(WHERE C.is_delivered)</span><br>Used by Reached clients. Its row filter moved into the measure</td></tr>
+          <tr class="head"><td colspan="2">Expressions · applied after aggregation</td></tr>
+          <tr><td colspan="2"><span class="x">sent = m1</span></td></tr>
+          <tr><td colspan="2"><span class="x">delivery_rate = m2 * 1.0 / NULLIF(m1, 0)</span></td></tr>
+          <tr><td colspan="2"><span class="x">reached_clients = m3</span></td></tr>
+        </tbody>
+      </table>
+      <p class="note" style="margin-top:2.5mm">One source, with no join. A fourth template, messages per client, was refused: it has more than one aggregation.</p>
+    </div>
+  </div>
+
+  <div class="block" style="margin-top:3mm">
+    <div class="codehead"><span class="n">3</span><h3>After</h3><span class="eyebrow">One statement for the three KPIs · Generated and executed</span></div>
+<pre class="code">WITH agg AS (
+  SELECT typology, market,
+    GROUPING_ID(typology, market) AS gid,
+    COUNT(*) AS <b>m1</b>,
+    COUNT(*) FILTER(WHERE C.is_delivered) AS <b>m2</b>,
+    COUNT(DISTINCT C.client_id) FILTER(WHERE C.is_delivered) AS <b>m3</b>
+  FROM message AS C
+  WHERE TRUE
+  GROUP BY <b>GROUPING SETS</b> ((typology, market), (typology), (market), ())
+  HAVING COUNT(*) &gt; 0
+)
+SELECT typology, market, gid,
+  m1 AS sent,
+  m2 * 1.0 / NULLIF(m1, 0) AS delivery_rate,
+  m3 AS reached_clients
+FROM agg</pre>
+  </div>
+
+  <div class="facts" style="margin-top:3.5mm; padding-top:2.8mm">
+    <div>
+      <h3>The three rewrites</h3>
+      <ol>
+        <li>The grouping slot becomes grouping sets: each total is computed from the rows.</li>
+        <li>Each aggregate becomes a measure; the rest is the expression. <code>COUNT(*)</code>, used by two KPIs, is kept once.</li>
+        <li>A row filter not shared by every KPI moves into its measure.</li>
+      </ol>
+    </div>
+    <div>
+      <h3>What the test showed</h3>
+      <ul>
+        <li>31 legacy values compared, at detail and at every total. None differ.</li>
+        <li>The legacy template cannot express a grand total: an empty column list is a syntax error.</li>
+        <li>The nested template was refused, with a reason.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Watch for</h3>
+      <ul>
+        <li>Empty groups: a market with nothing delivered shows 0 reached clients after migration, and no row before. Decide which is right.</li>
+        <li><code>m1</code> to <code>m3</code> are placeholders for the owner to name.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tested" style="margin-top:3mm">
+    <div><p class="eyebrow">Tested</p><p>Four templates, nine synthetic messages, DuckDB, sqlglot 30.25.0.</p></div>
+    <div class="when"><p class="eyebrow" style="color:var(--accent)">Continued on the next page</p><p>Joins, date parameters, optional filters, Databricks functions and six common engagement KPIs.</p></div>
+  </div>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 11 · Migration harder cases ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 4 · Migration · Harder cases</span></div>
+  <h2>Joins, parameters and Databricks functions</h2>
+  <p class="lede" style="font-size:9.8pt">A second test uses six common engagement KPIs (message-sent, message-reached, delivery-rate, open-rate, click-rate, click-to-open-rate), written with a dimension join, optional date parameters and Databricks functions. It ran on DuckDB and natively on a Databricks warehouse.</p>
+
+  <div class="block" style="margin-top:3.5mm">
+    <div class="codehead"><span class="n">1</span><h3>One of the six templates</h3><span class="eyebrow">Open Rate · Registry-style template</span></div>
+<pre class="code"><i>-- kpi: open-rate | open_rate</i>
+SELECT {{ group_by_list }},
+       <b>try_divide</b>(<b>COUNT_IF</b>(C.is_opened), <b>COUNT_IF</b>(C.is_delivered)) AS kpi_value
+FROM message C
+<b>LEFT JOIN</b> client D ON D.client_id = C.client_id
+WHERE 1 = 1
+  AND (<b>try_cast(:start_date AS DATE) IS NULL</b>
+       OR CAST(C.send_date AS DATE) &gt;= try_cast(:start_date AS DATE))
+  AND (<b>try_cast(:end_date AS DATE) IS NULL</b>
+       OR CAST(C.send_date AS DATE) &lt; try_cast(:end_date AS DATE))
+GROUP BY {{ group_by_list }};</pre>
+  </div>
+
+  <div class="codes even" style="margin-top:4mm">
+    <div>
+      <div class="codehead"><span class="n">2</span><h3>Inferred measures</h3><span class="eyebrow">Five behind six KPIs</span></div>
+      <table class="inferred">
+        <tbody>
+          <tr><td class="k">m1</td><td><span class="x">COUNT(*)</span><br>Sent, Delivery rate</td></tr>
+          <tr><td class="k">m2</td><td><span class="x">COUNT(DISTINCT C.client_id) FILTER(WHERE C.is_delivered)</span><br>Reached</td></tr>
+          <tr><td class="k">m3</td><td><span class="x">COUNT(*) FILTER(WHERE C.is_delivered)</span><br>Delivery rate, Open rate, Click rate</td></tr>
+          <tr><td class="k">m4</td><td><span class="x">COUNT(*) FILTER(WHERE C.is_opened)</span><br>Open rate, CTOR</td></tr>
+          <tr><td class="k">m5</td><td><span class="x">COUNT(*) FILTER(WHERE C.is_clicked)</span><br>Click rate, CTOR</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="codehead"><span class="n">3</span><h3>Inferred expressions</h3><span class="eyebrow">And what else was read</span></div>
+      <table class="inferred">
+        <tbody>
+          <tr><td><span class="x">sent = m1</span></td></tr>
+          <tr><td><span class="x">reached = m2</span></td></tr>
+          <tr><td><span class="x">delivery_rate = TRY_DIVIDE(m3, m1)</span></td></tr>
+          <tr><td><span class="x">open_rate = TRY_DIVIDE(m4, m3)</span></td></tr>
+          <tr><td><span class="x">click_rate = m5 * 1.0 / NULLIF(m3, 0)</span></td></tr>
+          <tr><td><span class="x">ctor = TRY_DIVIDE(m5, m4)</span></td></tr>
+          <tr><td><strong>Source.</strong> Messages joined to clients, one row per message.</td></tr>
+          <tr><td><strong>Filters.</strong> Two optional dates, <span class="x">:start_date</span> and <span class="x">:end_date</span>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:5mm"><h3>The five cases</h3><span class="eyebrow">What the tool does, and what the test showed</span></div>
+  <table class="cases" style="margin-top:2mm">
+    <thead><tr><th>Case</th><th>What the tool does</th><th>Result of the test</th></tr></thead>
+    <tbody>
+      <tr><td>Joins</td><td>Runs the join on the data and accepts it only if there is still one row per message</td><td>Client join kept. Event join refused: 13 messages become 14 rows</td></tr>
+      <tr><td>Date parameters</td><td>Keeps <code>:start_date</code> and <code>:end_date</code> as named parameters, never as pasted text</td><td>Bound natively on Databricks, empty values included</td></tr>
+      <tr><td>Optional filters</td><td>Recognises the <code>:p IS NULL OR …</code> pattern and keeps it as a row filter shared by all KPIs</td><td>Same values with no date, with a start date, and with both dates</td></tr>
+      <tr><td>Databricks functions</td><td>Reads <code>try_cast</code>, <code>try_divide</code> and <code>count_if</code>, and writes Databricks SQL back</td><td>Legacy templates and migrated statement both ran on Databricks</td></tr>
+      <tr><td>Six common KPIs</td><td>Finds five measures behind six KPIs; three spellings of a conditional count become one</td><td>200 legacy values compared. None differ</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tested" style="margin-top:3.5mm">
+    <div><p class="eyebrow">Tested</p><p>DuckDB and native Databricks, 93 statements, 12 November 2026. Three parameter settings, 34 groups, 200 legacy values, 18 of them empty on both sides for a zero denominator.</p></div>
+    <div class="when"><p class="eyebrow" style="color:var(--accent)">Still open</p><p>A production registry. These six templates are written for the test, and a real one will hold shapes not covered here. Also dimensions that change over time, and several fact tables.</p></div>
+  </div>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 12 · Migration plan ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 4 · Migration · Plan</span></div>
+  <h2>Migration in waves, with proof at each step</h2>
+  <p class="lede" style="font-size:9.8pt">Inference makes the first pass over a whole registry cheap, so the plan starts with an inventory and leaves the difficult KPIs for last. Each wave ends with evidence that a business owner can read.</p>
+
+  <div class="section-title" style="margin-top:5mm"><h3>Five waves</h3><span class="eyebrow">Each ends with evidence, not a date</span></div>
+  <table class="roadmap" style="margin-top:1mm">
+    <tbody>
+      <tr><td>1</td><td>Inventory</td><td>Run the inference over every registry template. Each KPI is sorted into automatic, rule-based or by hand, and shared measures are listed. This sizes the rest of the work.</td></tr>
+      <tr><td>2</td><td>Pilot</td><td>Message Sent and Delivery Rate. Old and new agree at every detail group, totals match an independent calculation, and the owner signs the two definitions.</td></tr>
+      <tr><td>3</td><td>Bulk</td><td>The remaining automatic and rule-based templates, in batches by source table. One comparison report per KPI, with every difference explained.</td></tr>
+      <tr><td>4</td><td>By hand</td><td>Nested and multi-source KPIs, one at a time, each with a written definition and its own tests.</td></tr>
+      <tr><td>5</td><td>Retire</td><td>Reports switch to the published definitions. Old and new run side by side for an agreed period. A template is removed only after its owner signs off.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title"><h3>Safeguards</h3><span class="eyebrow">What keeps a migrated KPI trustworthy</span></div>
+  <div class="guards">
+    <div><strong>Detail first.</strong> Compare old and new at detail level, where the legacy value is the reference.</div>
+    <div><strong>Totals against an independent calculation.</strong> The legacy path cannot produce them, so it cannot be their reference.</div>
+    <div><strong>Same data on both sides.</strong> One data version, the same filters and the same access rights for every comparison.</div>
+    <div><strong>One rule for empty groups</strong>, decided once and applied to every KPI.</div>
+    <div><strong>The template stays until sign-off.</strong> Rolling back means pointing the report at it again.</div>
+    <div><strong>One definition per KPI.</strong> After sign-off the template is retired, so two sources cannot drift apart.</div>
+  </div>
+
+  <div class="limits">
+    <h3>What inference cannot do</h3>
+    <p>It reads what the SQL does, not what the KPI should mean. A join that counts a message twice is carried over faithfully, and Reach or click-to-open rate are no clearer after parsing than before. Inference shortens the migration. The owner's decision is still what closes it.</p>
+  </div>
+
+  <div class="section-title"><h3>Who does what</h3><span class="eyebrow">Proposed roles</span></div>
+  <table class="where" style="margin-top:1mm">
+    <tbody>
+      <tr><td>Runs the inference and the comparisons, and maintains the rewrite rules</td><td style="font-family:var(--sans);font-size:8.5pt;color:var(--ink);font-weight:600">Engineering</td></tr>
+      <tr><td>Checks that each source has one row per message and that joins keep it so</td><td style="font-family:var(--sans);font-size:8.5pt;color:var(--ink);font-weight:600">Data owner</td></tr>
+      <tr><td>Names the measures, confirms the meaning, accepts or rejects each difference</td><td style="font-family:var(--sans);font-size:8.5pt;color:var(--ink);font-weight:600">KPI owner</td></tr>
+    </tbody>
+  </table>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+<!-- ───────────────────────── Page 13 · Decisions and plan ───────────────────────── -->
+<section class="page">
+  <div class="running"><span class="brand">A SQL query is not a KPI</span><span class="eyebrow">Part 5 · Decisions and plan</span></div>
+  <h2>What the business decides, and the order of work</h2>
+
+  <div class="section-title" style="margin-top:5mm"><h3>Decisions the business owns</h3><span class="eyebrow">No tool can make these</span></div>
+  <ul class="asks" style="margin-top:1mm">
+    <li><strong>Reach.</strong> Messages or people? The readings give different totals: on the 13 synthetic messages, 10 were delivered to 6 distinct clients. A quick test: compare a quarter with the sum of its months. Equal suggests messages; lower means people.</li>
+    <li><strong>Click-to-open rate.</strong> Clicks ÷ opens, or clicks ÷ delivered? Confirm the name and the denominator.</li>
+    <li><strong>Unknown values.</strong> Whether a message from a client missing in the dimension appears as "unknown" or is dropped.</li>
+    <li><strong>Exact or estimated audiences.</strong> Exact by default. An estimate is faster and must be labelled as one.</li>
+    <li><strong>Which totals to show</strong>, for example market across all years, and whether a subtotal with a single line beneath it is displayed.</li>
+  </ul>
+
+  <div class="section-title"><h3>Order of work</h3><span class="eyebrow">Each step ends with evidence, not a date</span></div>
+  <table class="roadmap" style="margin-top:1mm">
+    <tbody>
+      <tr><td>1</td><td>Agree the definitions and choose the option</td><td>Each KPI written as owner, population, numerator and denominator, and signed. The same acceptance tests run on the candidate options.</td></tr>
+      <tr><td>2</td><td>Build the smallest working core</td><td>Sent and Delivery rate match an independent check at every detail cell and total.</td></tr>
+      <tr><td>3</td><td>Move the confirmed KPIs across</td><td>Measures and expressions are inferred from the registry templates (pages 9 to 12). Each migrated KPI is reconciled with the current one, and every difference is accepted by its owner.</td></tr>
+      <tr><td>4</td><td>Release the pivot</td><td>Access rules are enforced, the automatic self-check is on, and run time and cost meet an agreed budget.</td></tr>
+      <tr><td>5</td><td>Add further capabilities one at a time</td><td>Period comparisons, combined audiences, estimates and optimisations, each with its own definition and test.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title" style="margin-top:4mm"><h3>Where the detail is</h3><span class="eyebrow">In the specification repository</span></div>
+  <table class="where" style="margin-top:1mm">
+    <tbody>
+      <tr><td>The implementation examples and the inference prototype</td><td>examples/walkthrough/</td></tr>
+      <tr><td>The Databricks run of the migration test</td><td>specs/kpi/validation/2026-11-12-migration/</td></tr>
+      <tr><td>The registry migration test: six KPIs, 13 messages</td><td>examples/registry/</td></tr>
+      <tr><td>Why totals break, worked on eight messages</td><td>specs/kpi/START-HERE.md</td></tr>
+      <tr><td>The solution decision and the alternatives</td><td>specs/kpi/05-first-principles-solution.md</td></tr>
+      <tr><td>The rules for totals, with the algebra and the self-checks</td><td>specs/kpi/16-correctness-contract.md</td></tr>
+      <tr><td>What has been tested and what has not</td><td>specs/kpi/14-test-strategy-and-traceability.md</td></tr>
+    </tbody>
+  </table>
+
+  <div class="closing" style="margin-top:4mm">
+    <p class="q">Keep SQL as the engine. Move the meaning of each KPI to a definition the business can read, own and reuse.</p>
+    <p><strong style="color:#fff">Evidence and limits.</strong> All examples use synthetic data: 100 messages on pages 1 and 3, eight on pages 4 to 7, thirteen in <code style="color:#fff">examples/registry/</code>. The 72 executions are arithmetic. The metric-view example was not run in its reduced form. No production total, run time or cost has been measured.</p>
+  </div>
+  <div class="foot"><span>Engagement KPI pivots · Why SQL queries do not define KPIs</span><span class="pn"></span></div>
+</section>
+
+</body>
+</html>

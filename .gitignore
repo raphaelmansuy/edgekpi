@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.egg-info/
+node_modules/
+.pytest_cache/
+.venv/
+demo/web/node_modules/
+demo/web/dist/
+demo/web/e2e/.results/
+demo/web/test-results/
+.edgekpi-service.log
+.DS_Store
+.vscode/
+.idea/
+*.bak

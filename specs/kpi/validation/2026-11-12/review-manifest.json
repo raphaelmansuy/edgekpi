@@ -1,0 +1,56 @@
+{
+  "date": "2026-11-12",
+  "timezone": "Asia/Hong_Kong",
+  "warehouse": {
+    "name": "Serverless Starter Warehouse",
+    "size": "2X-Small",
+    "photon": true,
+    "serverless": true,
+    "initial_state": "STOPPED"
+  },
+  "source": "workspace.edgekpi_spec.message",
+  "source_columns_described_before_sql": true,
+  "source_version_pinned": false,
+  "compute_runtime_version_captured": false,
+  "purpose": "Synthetic default S4 calculation parity, not production conformance or performance",
+  "local_test_result": {
+    "passed": 54,
+    "skipped": 43,
+    "xfailed": 2
+  },
+  "parity": {
+    "generated_sql": {
+      "statement_id": "<statement-id>",
+      "rows": 56,
+      "integer_atoms": "exact",
+      "ratios_tolerance": "1e-12",
+      "truncated": false
+    },
+    "native_metric_view": {
+      "statement_id": "<statement-id>",
+      "rows": 56,
+      "integer_atoms": "exact",
+      "ratios_tolerance": "1e-12",
+      "truncated": false
+    },
+    "local": {
+      "python": "3.12.14",
+      "duckdb": "2.0.0",
+      "source_grain": "1050 rows, 1050 distinct message ids"
+    },
+    "fixture_sha256": "f66d9a440eb12d6299825a661d7e96ac40590c32a246542eb2aef27f36f58528"
+  },
+  "files": {
+    "README.md": "8e2b6989cd4d3a0c6daed7091d8eba73a0933352f353705ceb132e68412ad0b5",
+    "generated-request.json": "b86bda9fe429df6e6e491f50e9a5846efccb6ed563ffa8f1c703730524d9bc6e",
+    "generated-response.json": "daaa21f5c67cb0da50c457c4e8b44edfffe898fea4da1fcb961c40441cd121f1",
+    "generated-s4.sql": "3ee27a948958e35f2d6c2a209545345878b1662f29d7cd5d343372bc09bc4995",
+    "local-tests.txt": "18171b27b902ec1c0dff3b7789f05651b86366d0add2a09300ae0cb39ef4f483",
+    "native-request.json": "7a48389603bc59e43c18cd77007a304b2baa3459c757e1cf5880f6e2a1408165",
+    "native-response.json": "daaa21f5c67cb0da50c457c4e8b44edfffe898fea4da1fcb961c40441cd121f1",
+    "native-s4.sql": "561351badf8fcc9d443fb66638a899d70289d98f26d2061fef3651475b0e5488",
+    "parity-summary.json": "bfa9759ad7626063f31102fd17cbf2b6b45811fa9bd9af6cf0badf4e5192786b",
+    "replay_results.py": "e2219f90f878495d09eadbc5756382218b9d6d75f563ebe9a8b6d4031ae7fdcc",
+    "../../fixtures/requirements-test.txt": "046a9d0de6cb8fae5a9302be4e0ba68e5bbc3587e7e43561bbec3e2c708517b5"
+  }
+}
