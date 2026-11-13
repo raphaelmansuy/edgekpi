@@ -2,6 +2,7 @@
 #
 #   make            show this help
 #   make demo       install what is missing, start the service and the demo, open nothing until you ask (OPEN=1)
+#   make tf-plan    plan the Cloud Run demo (deploy happens by merging to main)
 #
 # Works with GNU Make 3.81 (the one macOS ships). Set NO_COLOR=1 for plain output.
 
@@ -40,7 +41,7 @@ endif
 
 .PHONY: help doctor install install-python install-malloy install-web \
         demo api web open example test test-py test-web e2e check mutation evidence docs \
-        stop clean distclean
+        stop clean distclean deploy deploy-url deploy-logs deploy-delete tf-plan
 
 # ---- help --------------------------------------------------------------------------------------------------------
 
@@ -51,7 +52,8 @@ help: ## Show this help
 	@printf '  $(C)make demo$(X)       start the service and the demo  $(D)(http://localhost:$(WEB_PORT))$(X)\n\n'
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  $(C)%-16s$(X) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 	@printf '\n$(B)Options$(X)  $(D)(make demo API_PORT=9000 WEB_PORT=3000 OPEN=1)$(X)\n'
-	@printf '  API_PORT=$(API_PORT)   WEB_PORT=$(WEB_PORT)   OPEN=$(OPEN)   VENV=$(VENV)\n\n'
+	@printf '  API_PORT=$(API_PORT)   WEB_PORT=$(WEB_PORT)   OPEN=$(OPEN)   VENV=$(VENV)\n'
+	@printf '  PROJECT=$(PROJECT)   REGION=$(REGION)   SERVICE=$(SERVICE)\n\n'
 
 # ---- prerequisites -----------------------------------------------------------------------------------------------
 
@@ -205,3 +207,29 @@ clean: ## Remove build output, logs and test results (keeps installed packages)
 distclean: clean ## Also remove .venv and every node_modules (make install again afterwards)
 	@rm -rf $(VENV) $(WEB)/node_modules $(MALLOY)/node_modules
 	@printf '$(G)✓$(X) removed .venv and node_modules\n'
+
+# ---- deploy ------------------------------------------------------------------------------------------------------
+
+PROJECT ?= saas-app-001
+REGION  ?= us-central1
+SERVICE ?= edgekpi-demo
+
+deploy: ## Deploy happens by merging to main; GitHub Actions builds the image and applies Terraform
+	@printf '$(B)Deploy$(X)  merge a pull request to $(C)main$(X).\n'
+	@printf '  GitHub Actions builds the image and applies $(C)terraform/$(X).\n'
+	@printf '  A local plan, without applying: $(C)make tf-plan$(X)\n\n'
+
+tf-plan: ## Plan the demo infrastructure against the image that is already deployed
+	@image=$$(gcloud run services describe $(SERVICE) --project $(PROJECT) --region $(REGION) --format=json | python3 -c 'import json,sys; print(json.load(sys.stdin)["spec"]["template"]["spec"]["containers"][0]["image"])'); \
+	terraform -chdir=terraform init -input=false && \
+	terraform -chdir=terraform plan -input=false -var="image=$$image"
+
+deploy-url: ## Print the demo's Cloud Run URL
+	@gcloud run services describe $(SERVICE) --project $(PROJECT) --region $(REGION) --format='value(status.url)'
+
+deploy-logs: ## Tail the demo's Cloud Run logs
+	gcloud beta run services logs tail $(SERVICE) --project $(PROJECT) --region $(REGION)
+
+deploy-delete: ## Refuse: Terraform owns the Cloud Run service
+	@printf '$(R)The demo is managed by Terraform.$(X) Delete it with terraform destroy in terraform/, not from here.\n'
+	@exit 1
