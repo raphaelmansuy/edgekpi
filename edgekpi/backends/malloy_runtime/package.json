@@ -3,7 +3,7 @@
   "private": true,
   "description": "Runs a Malloy query produced by edgekpi on DuckDB or a Databricks SQL warehouse and prints the nested result as JSON.",
   "dependencies": {
-    "@malloydata/db-databricks": "0.0.437",
+    "@malloydata/db-databricks": "0.0.438",
     "@malloydata/db-duckdb": "0.0.437",
     "@malloydata/malloy": "0.0.437"
   }
