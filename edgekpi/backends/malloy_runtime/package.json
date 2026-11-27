@@ -5,6 +5,6 @@
   "dependencies": {
     "@malloydata/db-databricks": "0.0.437",
     "@malloydata/db-duckdb": "0.0.437",
-    "@malloydata/malloy": "0.0.437"
+    "@malloydata/malloy": "0.0.439"
   }
 }
